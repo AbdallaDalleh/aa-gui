@@ -39,6 +39,10 @@ private slots:
 
     void on_btnAddAll_clicked();
 
+    void on_btnRemove_clicked();
+
+    void on_btnRemoveAll_clicked();
+
 private:
     Ui::FormMain *ui;
 

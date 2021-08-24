@@ -73,18 +73,42 @@ bool FormMain::searchMatch(QString pv, QString arg)
         regex.setPatternSyntax(QRegExp::Wildcard);
         return regex.exactMatch(pv) || pv.contains(arg);
     }
+    else if(this->ui->rbRegex->isChecked())
+    {
+        QRegularExpression regex;
+        regex.setPattern(arg);
+        return regex.match(pv).hasMatch();
+    }
 
     return false;
 }
 
 void FormMain::on_btnAdd_clicked()
 {
-    this->ui->listData->addItem( this->ui->listBuffer->selectedItems()[0]->text() );
+    QString pv = this->ui->listBuffer->selectedItems()[0]->text();
+    if(this->ui->listData->findItems(pv, Qt::MatchExactly).empty())
+        this->ui->listData->addItem( this->ui->listBuffer->selectedItems()[0]->text() );
 }
 
 void FormMain::on_btnAddAll_clicked()
 {
-    foreach(QListWidgetItem* item, this->ui->listBuffer->selectedItems()) {
-        this->ui->listData->addItem(item->text());
+    for (QListWidgetItem* item : this->ui->listBuffer->selectedItems()) {
+        if(this->ui->listData->findItems(item->text(), Qt::MatchExactly).empty())
+            this->ui->listData->addItem(item->text());
+    }
+}
+
+void FormMain::on_btnRemove_clicked()
+{
+    if(this->ui->listData->selectedItems().size() > 0)
+        delete this->ui->listData->selectedItems()[0];
+}
+
+void FormMain::on_btnRemoveAll_clicked()
+{
+    if(this->ui->listData->selectedItems().size() > 0)
+    {
+        for(QListWidgetItem* item : this->ui->listData->selectedItems())
+            delete item;
     }
 }
