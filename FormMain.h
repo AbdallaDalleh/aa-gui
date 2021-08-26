@@ -8,11 +8,19 @@
 #include <QtNetwork/QNetworkReply>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QFileDialog>
 
 #define SERVER_IP       "10.1.100.9"
 #define RETRIEVAL_PORT  "17668"
 #define MGMT_PORT       "17665"
 #define REQUEST_PVS     "http://" SERVER_IP ":" MGMT_PORT "/mgmt/bpl/getAllPVs?limit=-1"
+
+enum OperationStatus
+{
+    InProgress,
+    Success,
+    Failed
+};
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class FormMain; }
@@ -28,6 +36,8 @@ public:
 
     bool searchMatch(QString pv, QString arg);
 
+    void setStatus(QString message, OperationStatus success);
+
 private slots:
     void networkReplyReceived(QNetworkReply *reply);
 
@@ -42,6 +52,10 @@ private slots:
     void on_btnRemove_clicked();
 
     void on_btnRemoveAll_clicked();
+
+    void on_btnLoad_clicked();
+
+    void on_btnSave_clicked();
 
 private:
     Ui::FormMain *ui;
