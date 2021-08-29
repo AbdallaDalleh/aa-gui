@@ -10,10 +10,13 @@
 #include <QJsonArray>
 #include <QFileDialog>
 
-#define SERVER_IP       "10.1.100.9"
-#define RETRIEVAL_PORT  "17668"
-#define MGMT_PORT       "17665"
-#define REQUEST_PVS     "http://" SERVER_IP ":" MGMT_PORT "/mgmt/bpl/getAllPVs?limit=-1"
+#define SERVER_IP           "10.1.100.9"
+#define RETRIEVAL_PORT      "17668"
+#define MGMT_PORT           "17665"
+#define REQUEST_PVS_LIST    "http://" SERVER_IP ":" MGMT_PORT "/mgmt/bpl/getAllPVs?limit=-1"
+#define REQUEST_DATA        "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.json?pv=%5_%4(%1)&from=%2&to=%3"
+#define REQUEST_DATA_CSV    "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.csv?pv=%5_%4(%1)&from=%2&to=%3"
+#define ISO_DATETIME        "yyyy-MM-ddThh:mm:ss.zzzZ"
 
 enum OperationStatus
 {
@@ -56,6 +59,10 @@ private slots:
     void on_btnLoad_clicked();
 
     void on_btnSave_clicked();
+
+    void on_btnNow_clicked();
+
+    void on_btnExportCSV_clicked();
 
 private:
     Ui::FormMain *ui;

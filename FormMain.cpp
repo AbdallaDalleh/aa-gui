@@ -27,13 +27,24 @@ void FormMain::networkReplyReceived(QNetworkReply *reply)
        QMessageBox::information(0, "Error", reply->errorString());
     else
     {
-        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
-        foreach(QJsonValue v, doc.array())
+        if(this->request.url().toString().contains(REQUEST_PVS_LIST))
         {
-            this->pvs.append(v.toString());
-            this->ui->listBuffer->addItem(v.toString());
+            QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+            foreach(QJsonValue v, doc.array())
+            {
+                this->pvs.append(v.toString());
+                this->ui->listBuffer->addItem(v.toString());
+            }
+            this->ui->listBuffer->sortItems();
         }
-        this->ui->listBuffer->sortItems();
+        else if(this->request.url().toString().contains("getData.csv"))
+        {
+            QFile file("/home/control/csv.txt");
+            file.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text);
+            QTextStream csv(&file);
+            csv << reply->readAll() << endl;
+            file.close();
+        }
     }
 }
 
@@ -41,7 +52,7 @@ void FormMain::on_btnFetch_clicked()
 {
     this->ui->listBuffer->clear();
     this->pvs.clear();
-    this->request.setUrl(QUrl(REQUEST_PVS));
+    this->request.setUrl(QUrl(REQUEST_PVS_LIST));
     network->get(request);
 }
 
@@ -215,9 +226,42 @@ void FormMain::on_btnSave_clicked()
         configTemplate << "pv " << this->ui->listData->item(i)->text() << endl;
     }
 
-    configTemplate << "from " << this->ui->dtFrom->dateTime().toString("yyyy-MM-ddThh:mm:ss.zzz") << endl;
-    configTemplate << "to " << this->ui->dtTo->dateTime().toString("yyyy-MM-ddThh:mm:ss.zzz") << endl;
+    configTemplate << "from " << this->ui->dtFrom->dateTime().toString(ISO_DATETIME) << endl;
+    configTemplate << "to " << this->ui->dtTo->dateTime().toString(ISO_DATETIME) << endl;
 
     file.close();
     setStatus("Template " + fileName + " saved successfully", Success);
+}
+
+void FormMain::on_btnNow_clicked()
+{
+    this->ui->dtTo->setDateTime(QDateTime::currentDateTime());
+}
+
+void FormMain::on_btnExportCSV_clicked()
+{
+    QString processingMethod;
+    int interval;
+
+    if(this->ui->cbMethod->currentIndex() == 0)
+        processingMethod = "firstFill";
+    else
+        processingMethod = this->ui->cbMethod->currentText();
+
+    if(this->ui->rbSecodns->isChecked())
+        interval = this->ui->sbPeriod->value();
+    else if(this->ui->rbMinutes->isChecked())
+        interval = this->ui->sbPeriod->value() * 60;
+    else
+        interval = this->ui->sbPeriod->value() * 3600;
+
+    QString url = QString(REQUEST_DATA_CSV)
+            .arg(this->ui->listData->item(0)->text())
+            .arg(this->ui->dtFrom->dateTime().toString(ISO_DATETIME))
+            .arg(this->ui->dtTo->dateTime().toString(ISO_DATETIME))
+            .arg(interval)
+            .arg(processingMethod);
+
+    this->request.setUrl(QUrl(url));
+    this->network->get(this->request);
 }

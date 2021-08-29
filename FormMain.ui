@@ -459,7 +459,7 @@ QGroupBox::title {
      <string>From</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="btnCSV">
+   <widget class="QPushButton" name="btnExportCSV">
     <property name="geometry">
      <rect>
       <x>680</x>
