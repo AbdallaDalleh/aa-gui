@@ -39,11 +39,7 @@ void FormMain::networkReplyReceived(QNetworkReply *reply)
         }
         else if(this->request.url().toString().contains("getData.csv"))
         {
-            QFile file("/home/control/csv.txt");
-            file.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text);
-            QTextStream csv(&file);
-            csv << reply->readAll() << endl;
-            file.close();
+            this->csvData.push_back(QString(reply->readAll()).split('\n'));
         }
     }
 }
@@ -241,27 +237,57 @@ void FormMain::on_btnNow_clicked()
 void FormMain::on_btnExportCSV_clicked()
 {
     QString processingMethod;
+    QString url;
+    QNetworkReply* reply;
+    QFile csvFile;
+    QTextStream csv;
     int interval;
-
-    if(this->ui->cbMethod->currentIndex() == 0)
-        processingMethod = "firstFill";
-    else
-        processingMethod = this->ui->cbMethod->currentText();
+    int sampling;
 
     if(this->ui->rbSecodns->isChecked())
-        interval = this->ui->sbPeriod->value();
+        sampling = this->ui->sbPeriod->value();
     else if(this->ui->rbMinutes->isChecked())
-        interval = this->ui->sbPeriod->value() * 60;
+        sampling = this->ui->sbPeriod->value() * 60;
     else
-        interval = this->ui->sbPeriod->value() * 3600;
+        sampling = this->ui->sbPeriod->value() * 3600;
+    processingMethod = this->ui->cbMethod->currentIndex() == 0 ? "firstFill" : this->ui->cbMethod->currentText();
+    interval = (this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t()) / sampling;
 
-    QString url = QString(REQUEST_DATA_CSV)
-            .arg(this->ui->listData->item(0)->text())
-            .arg(this->ui->dtFrom->dateTime().toString(ISO_DATETIME))
-            .arg(this->ui->dtTo->dateTime().toString(ISO_DATETIME))
-            .arg(interval)
-            .arg(processingMethod);
+    csvFile.setFileName("/home/control/csv.txt");
+    csvFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate);
+    csv.setDevice(&csvFile);
+    csv << "Timestamp,";
+    for(int i = 0; i < this->ui->listData->count(); i++)
+    {
+        csv << this->ui->listData->item(i)->text();
+        if(i != this->ui->listData->count() - 1)
+            csv << ",";
+        QEventLoop loop;
+        url = QString(REQUEST_DATA_CSV)
+                .arg(this->ui->listData->item(i)->text())
+                .arg(this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME))
+                .arg(this->ui->dtTo->dateTime().toUTC().toString(ISO_DATETIME))
+                .arg(sampling)
+                .arg(processingMethod);
 
-    this->request.setUrl(QUrl(url));
-    this->network->get(this->request);
+        this->request.setUrl(QUrl(url));
+        reply = this->network->get(this->request);
+        QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+        loop.exec();
+    }
+
+    csv << endl;
+    for(int t = 0; t < interval; t++)
+    {
+        csv << this->csvData[0][t].split(',')[0] << ",";
+        for(int n = 0; n < this->csvData.count(); n++)
+        {
+             csv << this->csvData[n][t].split(',')[1];
+             if(n != this->csvData.count() - 1)
+                 csv << ",";
+        }
+        csv << endl;
+    }
+
+    csvFile.close();
 }

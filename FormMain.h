@@ -1,6 +1,8 @@
 #ifndef FORMMAIN_H
 #define FORMMAIN_H
 
+#include <iostream>
+
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QtNetwork/QNetworkAccessManager>
@@ -70,5 +72,6 @@ private:
     QNetworkAccessManager* network;
     QNetworkRequest request;
     QStringList pvs;
+    QList<QStringList> csvData;
 };
 #endif // FORMMAIN_H
