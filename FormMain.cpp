@@ -253,7 +253,14 @@ void FormMain::on_btnExportCSV_clicked()
     processingMethod = this->ui->cbMethod->currentIndex() == 0 ? "firstFill" : this->ui->cbMethod->currentText();
     interval = (this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t()) / sampling;
 
-    csvFile.setFileName("/home/control/csv.txt");
+    QString fileName = QFileDialog::getSaveFileName(this, "Save CSV file", getenv("HOME"), tr("CSV Files (*.csv)"));
+    if(fileName.isEmpty())
+    {
+        setStatus("No file selected", Failed);
+        return;
+    }
+
+    csvFile.setFileName(fileName);
     csvFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate);
     csv.setDevice(&csvFile);
     csv << "Timestamp,";
@@ -274,9 +281,16 @@ void FormMain::on_btnExportCSV_clicked()
         reply = this->network->get(this->request);
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
         loop.exec();
+        if(reply->error() != QNetworkReply::NoError)
+        {
+            setStatus("Error fetching data for PV " + this->ui->listData->item(i)->text(), Failed);
+            csvFile.close();
+            return;
+        }
     }
 
     csv << endl;
+    this->ui->progressBar->setRange(0, interval);
     for(int t = 0; t < interval; t++)
     {
         csv << this->csvData[0][t].split(',')[0] << ",";
@@ -287,6 +301,7 @@ void FormMain::on_btnExportCSV_clicked()
                  csv << ",";
         }
         csv << endl;
+        this->ui->progressBar->setValue(t+1);
     }
 
     csvFile.close();
