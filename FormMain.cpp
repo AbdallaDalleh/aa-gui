@@ -137,7 +137,7 @@ void FormMain::on_btnLoad_clicked()
         setStatus("Could not open template: " + fileName, Failed);
     }
 
-    QRegExp regex("[:T-]");
+    QRegExp regex("[.:TZ-]");
     QString line;
     QStringList items;
     QStringList timestampItems;
@@ -159,7 +159,7 @@ void FormMain::on_btnLoad_clicked()
         {
             timestampItems = items[1].trimmed().split(regex);
             QDate date(timestampItems[0].toInt(), timestampItems[1].toInt(), timestampItems[2].toInt());
-            QTime time(timestampItems[3].toInt(), timestampItems[4].toInt(), timestampItems[5].toInt());
+            QTime time(timestampItems[3].toInt(), timestampItems[4].toInt(), timestampItems[5].toInt(), timestampItems[6].toInt());
             QDateTime dt(date, time);
             if(items[0] == "from")
                 this->ui->dtFrom->setDateTime(dt);
