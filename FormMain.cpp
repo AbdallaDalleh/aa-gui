@@ -193,7 +193,7 @@ void FormMain::setStatus(QString message, OperationStatus success)
 
 void FormMain::on_btnSave_clicked()
 {
-    if(this->ui->dtFrom->dateTime().toTime_t() > this->ui->dtTo->dateTime().toTime_t())
+    if(this->ui->dtFrom->dateTime().toTime_t() >= this->ui->dtTo->dateTime().toTime_t())
     {
         setStatus("Invalid date/time ranges", OperationStatus::Failed);
         return;
@@ -209,7 +209,17 @@ void FormMain::on_btnSave_clicked()
         return;
     }
 
-    QString fileName = this->ui->txtName->text();
+    QString directory = QFileDialog::getExistingDirectory(this, "Select A Folder", getenv("HOME"));
+    if(directory.isEmpty())
+    {
+        setStatus("Save directory not selected.", Failed);
+        return;
+    }
+
+    QString fileName = directory + "/" + this->ui->txtName->text();
+    if(!fileName.contains(".aat"))
+        fileName += ".aat";
+
     QFile file(fileName);
     if(!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
@@ -269,6 +279,7 @@ void FormMain::on_btnExportCSV_clicked()
         csv << this->ui->listData->item(i)->text();
         if(i != this->ui->listData->count() - 1)
             csv << ",";
+
         QEventLoop loop;
         url = QString(REQUEST_DATA_CSV)
                 .arg(this->ui->listData->item(i)->text())
