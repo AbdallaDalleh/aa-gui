@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormPlot</class>
+ <widget class="QMainWindow" name="FormPlot">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1481</width>
+    <height>827</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QDateTimeEdit" name="dtFrom">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>210</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="displayFormat">
+     <string>dd/MM/yyyy hh:mm:ss AP</string>
+    </property>
+    <property name="calendarPopup">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QDateTimeEdit" name="dtTo">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>10</y>
+      <width>210</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="displayFormat">
+     <string>dd/MM/yyyy hh:mm:ss AP</string>
+    </property>
+    <property name="calendarPopup">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>10</y>
+      <width>20</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-&gt;</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnPlot">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>10</y>
+      <width>60</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Plot</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnLive">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>10</y>
+      <width>70</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Live</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="txtPV">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>10</y>
+      <width>341</width>
+      <height>30</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnAdd">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>620</x>
+      <y>10</y>
+      <width>70</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnResetAxis">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>1190</x>
+      <y>10</y>
+      <width>80</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reset Axis</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnResetGraph">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>1280</x>
+      <y>10</y>
+      <width>100</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reset Graph</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnScreenshot">
+    <property name="geometry">
+     <rect>
+      <x>1390</x>
+      <y>10</y>
+      <width>83</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Save Plot</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="cbTimestamp">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>1040</x>
+      <y>10</y>
+      <width>140</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>Timestamps</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>30 seconds</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>1 minute</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>5 minutes</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>15 minutes</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>30 minutes</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>1 hour</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>4 hours</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>8 hours</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>1 day</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>2 days</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>1 week</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>2 weeks</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>1 month</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>6 months</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>1 year</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QCustomPlot" name="plot" native="true">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>1461</width>
+      <height>770</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header location="global">qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

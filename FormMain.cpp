@@ -14,6 +14,8 @@ FormMain::FormMain(QWidget *parent)
     QObject::connect(network, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkReplyReceived(QNetworkReply*)));
 
     this->on_btnFetch_clicked();
+
+    this->plot = NULL;
 }
 
 FormMain::~FormMain()
@@ -324,7 +326,6 @@ void FormMain::on_btnExportMAT_clicked()
     QString url;
     QFile matFile;
     QNetworkReply* reply;
-    int interval;
     int sampling;
 
     if(this->ui->rbSecodns->isChecked())
@@ -334,7 +335,6 @@ void FormMain::on_btnExportMAT_clicked()
     else
         sampling = this->ui->sbPeriod->value() * 3600;
     processingMethod = this->ui->cbMethod->currentIndex() == 0 ? "firstFill" : this->ui->cbMethod->currentText();
-    interval = (this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t()) / sampling;
 
     QString directory = QFileDialog::getExistingDirectory(0, "Select a Directory", getenv("HOME"));
     if(directory.isEmpty())
@@ -381,4 +381,11 @@ void FormMain::on_btnExportMAT_clicked()
     }
 
     setStatus("Data exported successfully", Success);
+}
+
+void FormMain::on_btnPlotData_clicked()
+{
+    this->plot = new FormPlot(this->pvs, this->ui->dtFrom->dateTime(), this->ui->dtTo->dateTime(), this);
+    this->plot->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, this->plot->size(), qApp->desktop()->availableGeometry()));
+    this->plot->show();
 }

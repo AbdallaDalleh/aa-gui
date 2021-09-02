@@ -1,8 +1,6 @@
 #ifndef FORMMAIN_H
 #define FORMMAIN_H
 
-#include <iostream>
-
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QtNetwork/QNetworkAccessManager>
@@ -11,6 +9,8 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QFileDialog>
+
+#include "FormPlot.h"
 
 #define SERVER_IP           "10.1.100.9"
 #define RETRIEVAL_PORT      "17668"
@@ -69,6 +69,8 @@ private slots:
 
     void on_btnExportMAT_clicked();
 
+    void on_btnPlotData_clicked();
+
 private:
     Ui::FormMain *ui;
 
@@ -76,5 +78,7 @@ private:
     QNetworkRequest request;
     QStringList pvs;
     QList<QStringList> csvData;
+
+    FormPlot* plot;
 };
 #endif // FORMMAIN_H

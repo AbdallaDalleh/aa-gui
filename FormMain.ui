@@ -383,7 +383,7 @@ QGroupBox::title {
      <string>&lt;&lt;</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="btnData">
+   <widget class="QPushButton" name="btnPlotData">
     <property name="geometry">
      <rect>
       <x>540</x>
