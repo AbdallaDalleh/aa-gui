@@ -18,6 +18,7 @@
 #define REQUEST_PVS_LIST    "http://" SERVER_IP ":" MGMT_PORT "/mgmt/bpl/getAllPVs?limit=-1"
 #define REQUEST_DATA        "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.json?pv=%5_%4(%1)&from=%2&to=%3"
 #define REQUEST_DATA_CSV    "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.csv?pv=%5_%4(%1)&from=%2&to=%3"
+#define REQUEST_DATA_MAT    "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.mat?pv=%1&from=%2&to=%3"
 #define ISO_DATETIME        "yyyy-MM-ddThh:mm:ss.zzzZ"
 
 enum OperationStatus
@@ -65,6 +66,8 @@ private slots:
     void on_btnNow_clicked();
 
     void on_btnExportCSV_clicked();
+
+    void on_btnExportMAT_clicked();
 
 private:
     Ui::FormMain *ui;

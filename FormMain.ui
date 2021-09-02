@@ -169,9 +169,9 @@ QGroupBox::title {
    <widget class="QPushButton" name="btnSave">
     <property name="geometry">
      <rect>
-      <x>550</x>
+      <x>540</x>
       <y>450</y>
-      <width>120</width>
+      <width>150</width>
       <height>50</height>
      </rect>
     </property>
@@ -266,9 +266,9 @@ QGroupBox::title {
    <widget class="QPushButton" name="btnLoad">
     <property name="geometry">
      <rect>
-      <x>680</x>
+      <x>710</x>
       <y>450</y>
-      <width>120</width>
+      <width>150</width>
       <height>50</height>
      </rect>
     </property>
@@ -386,9 +386,9 @@ QGroupBox::title {
    <widget class="QPushButton" name="btnData">
     <property name="geometry">
      <rect>
-      <x>550</x>
+      <x>540</x>
       <y>510</y>
-      <width>120</width>
+      <width>100</width>
       <height>50</height>
      </rect>
     </property>
@@ -462,9 +462,9 @@ QGroupBox::title {
    <widget class="QPushButton" name="btnExportCSV">
     <property name="geometry">
      <rect>
-      <x>680</x>
+      <x>650</x>
       <y>510</y>
-      <width>120</width>
+      <width>100</width>
       <height>50</height>
      </rect>
     </property>
@@ -519,6 +519,19 @@ QGroupBox::title {
     <attribute name="buttonGroup">
      <string notr="true">buttonGroup</string>
     </attribute>
+   </widget>
+   <widget class="QPushButton" name="btnExportMAT">
+    <property name="geometry">
+     <rect>
+      <x>760</x>
+      <y>510</y>
+      <width>100</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Export MAT</string>
+    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

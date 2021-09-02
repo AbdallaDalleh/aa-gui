@@ -317,3 +317,68 @@ void FormMain::on_btnExportCSV_clicked()
 
     csvFile.close();
 }
+
+void FormMain::on_btnExportMAT_clicked()
+{
+    QString processingMethod;
+    QString url;
+    QFile matFile;
+    QNetworkReply* reply;
+    int interval;
+    int sampling;
+
+    if(this->ui->rbSecodns->isChecked())
+        sampling = this->ui->sbPeriod->value();
+    else if(this->ui->rbMinutes->isChecked())
+        sampling = this->ui->sbPeriod->value() * 60;
+    else
+        sampling = this->ui->sbPeriod->value() * 3600;
+    processingMethod = this->ui->cbMethod->currentIndex() == 0 ? "firstFill" : this->ui->cbMethod->currentText();
+    interval = (this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t()) / sampling;
+
+    QString directory = QFileDialog::getExistingDirectory(0, "Select a Directory", getenv("HOME"));
+    if(directory.isEmpty())
+    {
+        setStatus("Save directory not selected", Failed);
+        return;
+    }
+
+    if(this->ui->listData->count() <= 0)
+    {
+        setStatus("No PVs selected", Failed);
+        return;
+    }
+
+    for(int i = 0; i < this->ui->listData->count(); i++)
+    {
+        matFile.setFileName(directory + "/" + this->ui->listData->item(i)->text() + ".mat");
+        if(!matFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
+        {
+            setStatus("Could not open file " + matFile.fileName(), Failed);
+            return;
+        }
+
+        QEventLoop loop;
+        url = QString(REQUEST_DATA_MAT)
+                .arg(this->ui->listData->item(i)->text())
+                .arg(this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME))
+                .arg(this->ui->dtTo->dateTime().toUTC().toString(ISO_DATETIME))
+                .arg(sampling)
+                .arg(processingMethod);
+
+        this->request.setUrl(QUrl(url));
+        reply = this->network->get(this->request);
+        QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+        loop.exec();
+        if(reply->error() != QNetworkReply::NoError)
+        {
+            setStatus("Reply error for PV " + this->ui->listData->item(i)->text(), Failed);
+            return;
+        }
+
+        matFile.write(reply->readAll());
+        matFile.close();
+    }
+
+    setStatus("Data exported successfully", Success);
+}
