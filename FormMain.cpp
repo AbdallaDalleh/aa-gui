@@ -218,7 +218,7 @@ void FormMain::on_btnSave_clicked()
         return;
     }
 
-    QString fileName = directory + "/" + this->ui->txtName->text();
+    QString fileName = directory + "/" + QFileInfo(this->ui->txtName->text()).fileName();
     if(!fileName.contains(".aat"))
         fileName += ".aat";
 
@@ -256,6 +256,11 @@ void FormMain::on_btnExportCSV_clicked()
     int interval;
     int sampling;
 
+    foreach (auto item, this->csvData) {
+        item.clear();
+    }
+    this->csvData.clear();
+
     if(this->ui->rbSecodns->isChecked())
         sampling = this->ui->sbPeriod->value();
     else if(this->ui->rbMinutes->isChecked())
@@ -276,6 +281,8 @@ void FormMain::on_btnExportCSV_clicked()
     csvFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate);
     csv.setDevice(&csvFile);
     csv << "Timestamp,";
+    setStatus("Fetching data from the server ...", InProgress);
+    this->ui->progressBar->setRange(0, this->ui->listData->count());
     for(int i = 0; i < this->ui->listData->count(); i++)
     {
         csv << this->ui->listData->item(i)->text();
@@ -300,8 +307,11 @@ void FormMain::on_btnExportCSV_clicked()
             csvFile.close();
             return;
         }
+
+        this->ui->progressBar->setValue(i + 1);
     }
 
+    setStatus("Exporting to CSV ...", InProgress);
     csv << endl;
     this->ui->progressBar->setRange(0, interval);
     for(int t = 0; t < interval; t++)
@@ -318,6 +328,7 @@ void FormMain::on_btnExportCSV_clicked()
     }
 
     csvFile.close();
+    setStatus("Data exported to " + fileName + " successfully.", Success);
 }
 
 void FormMain::on_btnExportMAT_clicked()
@@ -349,6 +360,8 @@ void FormMain::on_btnExportMAT_clicked()
         return;
     }
 
+    setStatus("Fetching data from the server and exporting to MAT files ...", InProgress);
+    this->ui->progressBar->setRange(0, this->ui->listData->count());
     for(int i = 0; i < this->ui->listData->count(); i++)
     {
         matFile.setFileName(directory + "/" + this->ui->listData->item(i)->text() + ".mat");
@@ -378,6 +391,7 @@ void FormMain::on_btnExportMAT_clicked()
 
         matFile.write(reply->readAll());
         matFile.close();
+        this->ui->progressBar->setValue(i + 1);
     }
 
     setStatus("Data exported successfully", Success);
