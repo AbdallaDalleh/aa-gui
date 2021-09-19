@@ -1,6 +1,8 @@
 #include "FormMain.h"
 #include "ui_FormMain.h"
 
+#include <iostream>
+
 FormMain::FormMain(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::FormMain)
@@ -41,7 +43,13 @@ void FormMain::networkReplyReceived(QNetworkReply *reply)
         }
         else if(this->request.url().toString().contains("getData.csv"))
         {
-            this->csvData.push_back(QString(reply->readAll()).split('\n'));
+            QString raw = QString(reply->readAll());
+            QStringList samples = raw.split('\n');
+            if(samples[samples.size() - 1].isEmpty())
+                samples.removeAt(samples.size() - 1);
+            if(samples[samples.size() - 1].isEmpty())
+                samples.removeAt(samples.size() - 1);
+            this->csvData.push_back(samples);
         }
     }
 }
@@ -138,6 +146,8 @@ void FormMain::on_btnLoad_clicked()
     {
         setStatus("Could not open template: " + fileName, Failed);
     }
+
+    this->ui->listData->clear();
 
     QRegExp regex("[.:TZ-]");
     QString line;
@@ -314,14 +324,25 @@ void FormMain::on_btnExportCSV_clicked()
     setStatus("Exporting to CSV ...", InProgress);
     csv << endl;
     this->ui->progressBar->setRange(0, interval);
+    int timestamp = this->csvData[0][0].split(',')[0].toInt();
+    for (int i = 1; i < this->csvData.size(); i++)
+    {
+        if(this->csvData[i].size() > this->csvData[i - 1].size())
+            timestamp = this->csvData[i][0].split(',')[0].toInt();
+    }
+
     for(int t = 0; t < interval; t++)
     {
-        csv << this->csvData[0][t].split(',')[0] << ",";
+        csv << timestamp << ",";
+        timestamp += sampling;
         for(int n = 0; n < this->csvData.count(); n++)
         {
-             csv << this->csvData[n][t].split(',')[1];
-             if(n != this->csvData.count() - 1)
-                 csv << ",";
+            if(timestamp < this->csvData[n][0].split(',')[0].toInt() || t >= this->csvData[n].size())
+                csv << "0";
+            else
+                csv << this->csvData[n][t].split(',')[1];
+            if(n != this->csvData.count() - 1)
+                csv << ",";
         }
         csv << endl;
         this->ui->progressBar->setValue(t+1);
