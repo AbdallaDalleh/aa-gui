@@ -28,6 +28,12 @@ enum OperationStatus
     Failed
 };
 
+struct data_sample
+{
+    int timestamp;
+    double value;
+};
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class FormMain; }
 QT_END_NAMESPACE
@@ -77,7 +83,7 @@ private:
     QNetworkAccessManager* network;
     QNetworkRequest request;
     QStringList pvs;
-    QList<QStringList> csvData;
+    QList<QList<data_sample>> pvData;
 
     FormPlot* plot;
 };

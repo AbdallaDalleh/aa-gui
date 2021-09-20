@@ -49,7 +49,16 @@ void FormMain::networkReplyReceived(QNetworkReply *reply)
                 samples.removeAt(samples.size() - 1);
             if(samples[samples.size() - 1].isEmpty())
                 samples.removeAt(samples.size() - 1);
-            this->csvData.push_back(samples);
+
+            QList<data_sample> list;
+            for(QString sample : samples)
+            {
+                data_sample d;
+                d.timestamp = sample.split(',')[0].toInt();
+                d.value = sample.split(',')[1].toDouble();
+                list.push_back(d);
+            }
+            pvData.push_back(list);
         }
     }
 }
@@ -266,10 +275,9 @@ void FormMain::on_btnExportCSV_clicked()
     int interval;
     int sampling;
 
-    foreach (auto item, this->csvData) {
+    for(auto item : this->pvData)
         item.clear();
-    }
-    this->csvData.clear();
+    this->pvData.clear();
 
     if(this->ui->rbSecodns->isChecked())
         sampling = this->ui->sbPeriod->value();
@@ -324,24 +332,28 @@ void FormMain::on_btnExportCSV_clicked()
     setStatus("Exporting to CSV ...", InProgress);
     csv << endl;
     this->ui->progressBar->setRange(0, interval);
-    int timestamp = this->csvData[0][0].split(',')[0].toInt();
-    for (int i = 1; i < this->csvData.size(); i++)
+    int timestamp = this->pvData[0][0].timestamp;
+    for (int i = 1; i < this->pvData.size(); i++)
     {
-        if(this->csvData[i].size() > this->csvData[i - 1].size())
-            timestamp = this->csvData[i][0].split(',')[0].toInt();
+        if(this->pvData[i].size() > this->pvData[i - 1].size())
+            timestamp = this->pvData[i][0].timestamp;
+    }
+
+    for(int i = 0; i < this->pvData.size(); i++)
+    {
+        for(int t = this->pvData[i][0].timestamp - sampling; t >= timestamp; t -= sampling)
+        {
+            this->pvData[i].insert(0, data_sample{t, 0.0});
+        }
     }
 
     for(int t = 0; t < interval; t++)
     {
-        csv << timestamp << ",";
-        timestamp += sampling;
-        for(int n = 0; n < this->csvData.count(); n++)
+        csv << this->pvData[0][t].timestamp << ",";
+        for(int i = 0; i < this->pvData.size(); i++)
         {
-            if(timestamp < this->csvData[n][0].split(',')[0].toInt() || t >= this->csvData[n].size())
-                csv << "0";
-            else
-                csv << this->csvData[n][t].split(',')[1];
-            if(n != this->csvData.count() - 1)
+            csv << this->pvData[i][t].value;
+            if(i != this->pvData.size() - 1)
                 csv << ",";
         }
         csv << endl;
