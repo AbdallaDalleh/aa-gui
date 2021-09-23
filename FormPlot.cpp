@@ -139,10 +139,42 @@ void FormPlot::networkReplyReceived(QNetworkReply* reply)
             }
             pvData.push_back(list);
         }
+        else if(this->request.url().toString().contains("getPVDetails"))
+        {
+            return;
+        }
         else
         {
             QMessageBox::information(0, "Error", "Invalid request");
             return;
         }
     }
+}
+
+QString FormPlot::getUnit(QString pv)
+{
+    QEventLoop loop;
+    QNetworkReply* reply;
+    QString url = QString(REQUEST_PV_DETAILS).arg(pv);
+    this->request.setUrl(QUrl(url));
+    reply = this->network->get(this->request);
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+    if(reply->error() != QNetworkReply::NoError)
+    {
+        return "";
+    }
+
+    QJsonParseError error;
+    QString response = reply->readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8(), &error);
+    if(error.error != QJsonParseError::NoError)
+        return "";
+
+    for(auto object : doc.array())
+    {
+        if(object.toObject()["name"] == "Units:")
+            return object.toObject()["value"].toString();
+    }
+    return "";
 }
