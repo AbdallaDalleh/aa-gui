@@ -28,11 +28,11 @@ enum OperationStatus
     Failed
 };
 
-struct data_sample
-{
-    int timestamp;
-    double value;
-};
+//struct data_sample
+//{
+//    int timestamp;
+//    double value;
+//};
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class FormMain; }

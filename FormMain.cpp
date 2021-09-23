@@ -432,7 +432,23 @@ void FormMain::on_btnExportMAT_clicked()
 
 void FormMain::on_btnPlotData_clicked()
 {
-    this->plot = new FormPlot(this->pvs, this->ui->dtFrom->dateTime(), this->ui->dtTo->dateTime(), this);
+    QStringList pvList;
+    QString processingMethod;
+    int sampling;
+
+    if(this->ui->rbSecodns->isChecked())
+        sampling = this->ui->sbPeriod->value();
+    else if(this->ui->rbMinutes->isChecked())
+        sampling = this->ui->sbPeriod->value() * 60;
+    else
+        sampling = this->ui->sbPeriod->value() * 3600;
+
+    for (int i = 0; i < this->ui->listData->count(); i++ ) {
+        pvList.push_back(this->ui->listData->item(i)->text());
+    }
+
+    processingMethod = this->ui->cbMethod->currentIndex() == 0 ? "firstFill" : this->ui->cbMethod->currentText();
+    this->plot = new FormPlot(pvList, this->ui->dtFrom->dateTime(), this->ui->dtTo->dateTime(), sampling, processingMethod, this);
     this->plot->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, this->plot->size(), qApp->desktop()->availableGeometry()));
     this->plot->show();
 }
