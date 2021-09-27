@@ -48,14 +48,17 @@ private slots:
 private:
     Ui::FormPlot *ui;
 
+    int sampling;
     QStringList pvList;
     QCompleter* completer;
     QList<QList<data_sample>> pvData;
     QNetworkAccessManager* network;
     QNetworkRequest request;
-    int sampling;
     QString processingMethod;
     QColor colors[GRAPH_COUNT];
+    QMap<QString, QCPAxis*> axisMap;
+
+    QCPAxisRect* plotAxis;
 };
 
 #endif // FORMPLOT_H

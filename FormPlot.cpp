@@ -34,14 +34,40 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     this->colors[14] = QColor("#000066");
     this->colors[15] = QColor(Qt::black);
 
-//    this->ui->plot->plotLayout()->clear();
-//    // this->ui->plot->setInteractions(/*QCP::iRangeZoom | */QCP::iRangeDrag | QCP::iSelectLegend | QCP::iMultiSelect);
-//    this->ui->plot->legend = new QCPLegend;
-//    this->ui->plot->legend->setVisible(true);
-//    this->ui->plot->legend->setSelectableParts(QCPLegend::spNone);
-
     this->network = new QNetworkAccessManager();
     QObject::connect(network, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkReplyReceived(QNetworkReply*)));
+
+    this->ui->plot->plotLayout()->clear();
+    this->ui->plot->legend = new QCPLegend;
+    this->ui->plot->legend->setVisible(true);
+    this->ui->plot->legend->setSelectableParts(QCPLegend::spNone);
+    this->plotAxis = new QCPAxisRect(this->ui->plot);
+    this->plotAxis->setupFullAxesBox(true);
+    this->plotAxis->axis(QCPAxis::atLeft, 0)->setTickLabels(true);
+    for(int i = 0; i < this->pvList.count(); i++)
+    {
+        QString key = getUnit(this->pvList[i]);
+        if(i == 0)
+        {
+            this->plotAxis->axis(QCPAxis::atLeft, 0)->setLabel(key);
+            this->axisMap[key] = this->plotAxis->axis(QCPAxis::atLeft, 0);
+        }
+        else
+        {
+            this->axisMap[key] = this->plotAxis->addAxis(QCPAxis::atLeft);
+            this->plotAxis->axis(QCPAxis::atLeft, i)->setLabel(key);
+        }
+    }
+    this->ui->plot->plotLayout()->addElement(0, 0, this->plotAxis);
+
+    QCPLayoutGrid *subLayout = new QCPLayoutGrid;
+    ui->plot->plotLayout()->addElement(0, 1, subLayout);
+
+    subLayout->addElement(0, 0, this->ui->plot->legend);
+    subLayout->setMargins(QMargins(0, 0, 0, 0));
+    ui->plot->legend->setFillOrder(QCPLegend::foRowsFirst);
+    ui->plot->plotLayout()->setColumnStretchFactor(0, 9);
+    ui->plot->plotLayout()->setColumnStretchFactor(1, 1);
 
     sendRequest();
 }
@@ -61,11 +87,13 @@ void FormPlot::plotData()
 
     for (int i = 0; i < this->pvList.size(); i++) {
         yAxis.clear();
-        QCPGraph* graph = this->ui->plot->addGraph();
+        QString axis = getUnit(this->pvList[i]);
+        QCPGraph* graph = this->ui->plot->addGraph(this->plotAxis->axis(QCPAxis::atBottom), this->axisMap[axis]);
         graph->setPen(QPen(this->colors[i]));
         for(auto item : this->pvData[i])
             yAxis.push_back(item.value);
         graph->setData(xAxis, yAxis);
+        graph->setName(this->pvList[i]);
         graph->keyAxis()->rescale();
         graph->valueAxis()->rescale();
     }
