@@ -60,9 +60,6 @@
     </property>
    </widget>
    <widget class="QPushButton" name="btnPlot">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
     <property name="geometry">
      <rect>
       <x>470</x>

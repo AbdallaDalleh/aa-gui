@@ -295,6 +295,9 @@ void FormMain::on_btnExportCSV_clicked()
         return;
     }
 
+    if(!fileName.endsWith(".csv"))
+        fileName += ".csv";
+
     csvFile.setFileName(fileName);
     csvFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate);
     csv.setDevice(&csvFile);
