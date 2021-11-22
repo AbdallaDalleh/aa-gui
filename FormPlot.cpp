@@ -18,7 +18,7 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     this->processingMethod = processingMethod;
 
     this->colors[0]  = QColor(Qt::blue);
-    this->colors[1]  = QColor("#ff7733");
+    this->colors[1]  = QColor(0xff, 0x77, 0x33);
     this->colors[2]  = QColor(Qt::darkCyan);
     this->colors[3]  = QColor(Qt::red);
     this->colors[4]  = QColor(Qt::green);
@@ -26,12 +26,12 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     this->colors[6]  = QColor(Qt::magenta);
     this->colors[7]  = QColor(Qt::gray);
     this->colors[8]  = QColor(Qt::darkYellow);
-    this->colors[9]  = QColor("#003300");
-    this->colors[10] = QColor("#993333");
-    this->colors[11] = QColor("#6699ff");
-    this->colors[12] = QColor("#663300");
-    this->colors[13] = QColor("#ff66ff");
-    this->colors[14] = QColor("#000066");
+    this->colors[9]  = QColor(0x00, 0x33, 0x00);
+    this->colors[10] = QColor(0x99, 0x33, 0x33);
+    this->colors[11] = QColor(0x66, 0x99, 0xff);
+    this->colors[12] = QColor(0x66, 0x33, 0x00);
+    this->colors[13] = QColor(0xff, 0x66, 0xff);
+    this->colors[14] = QColor(0x00, 0x00, 0x66);
     this->colors[15] = QColor(Qt::black);
 
     this->network = new QNetworkAccessManager();

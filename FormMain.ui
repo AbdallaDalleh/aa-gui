@@ -384,9 +384,6 @@ QGroupBox::title {
     </property>
    </widget>
    <widget class="QPushButton" name="btnPlotData">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
     <property name="geometry">
      <rect>
       <x>540</x>

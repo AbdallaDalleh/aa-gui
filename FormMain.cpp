@@ -275,7 +275,7 @@ void FormMain::on_btnExportCSV_clicked()
     int interval;
     int sampling;
 
-    for(auto item : this->pvData)
+    for(auto item : qAsConst(this->pvData))
         item.clear();
     this->pvData.clear();
 
@@ -312,11 +312,11 @@ void FormMain::on_btnExportCSV_clicked()
 
         QEventLoop loop;
         url = QString(REQUEST_DATA_CSV)
-                .arg(this->ui->listData->item(i)->text())
-                .arg(this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME))
-                .arg(this->ui->dtTo->dateTime().toUTC().toString(ISO_DATETIME))
-                .arg(sampling)
-                .arg(processingMethod);
+                .arg(this->ui->listData->item(i)->text(),
+                 this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME),
+                 this->ui->dtTo->dateTime().toUTC().toString(ISO_DATETIME),
+                 QString::number(sampling),
+                 processingMethod);
 
         this->request.setUrl(QUrl(url));
         reply = this->network->get(this->request);
@@ -409,11 +409,11 @@ void FormMain::on_btnExportMAT_clicked()
 
         QEventLoop loop;
         url = QString(REQUEST_DATA_MAT)
-                .arg(this->ui->listData->item(i)->text())
-                .arg(this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME))
-                .arg(this->ui->dtTo->dateTime().toUTC().toString(ISO_DATETIME))
-                .arg(sampling)
-                .arg(processingMethod);
+                .arg(this->ui->listData->item(i)->text(),
+                 this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME),
+                 this->ui->dtTo->dateTime().toUTC().toString(ISO_DATETIME),
+                 QString::number(sampling),
+                 processingMethod);
 
         this->request.setUrl(QUrl(url));
         reply = this->network->get(this->request);
