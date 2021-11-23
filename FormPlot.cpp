@@ -37,6 +37,7 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     this->network = new QNetworkAccessManager();
     QObject::connect(network, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkReplyReceived(QNetworkReply*)));
 
+    this->ui->plot->setOpenGl(true);
     this->ui->plot->plotLayout()->clear();
     this->ui->plot->legend = new QCPLegend;
     this->ui->plot->legend->setVisible(true);
@@ -80,18 +81,20 @@ FormPlot::~FormPlot()
 void FormPlot::plotData()
 {
     QVector<double> xAxis, yAxis;
-    for(auto item : this->pvData[0])
+    for(auto item : qAsConst(this->pvData[0]))
     {
         xAxis.push_back(item.timestamp);
     }
 
     for (int i = 0; i < this->pvList.size(); i++) {
         yAxis.clear();
+        for(auto item : qAsConst(this->pvData[i]))
+            yAxis.push_back(item.value);
+
         QString axis = getUnit(this->pvList[i]);
         QCPGraph* graph = this->ui->plot->addGraph(this->plotAxis->axis(QCPAxis::atBottom), this->axisMap[axis]);
+        graph->setLineStyle(QCPGraph::lsLine);
         graph->setPen(QPen(this->colors[i]));
-        for(auto item : this->pvData[i])
-            yAxis.push_back(item.value);
         graph->setData(xAxis, yAxis);
         graph->setName(this->pvList[i]);
         graph->keyAxis()->rescale();
@@ -106,12 +109,12 @@ void FormPlot::sendRequest()
     for(int i = 0; i < this->pvList.size(); i++)
     {
         QEventLoop loop;
-        url = QString(REQUEST_DATA_CSV)
-                .arg(this->pvList[i])
-                .arg(this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME))
-                .arg(this->ui->dtTo->dateTime().toUTC().toString(ISO_DATETIME))
-                .arg(sampling)
-                .arg(processingMethod);
+        url = QString(REQUEST_DATA_CSV).arg(
+                this->pvList[i],
+                this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME),
+                this->ui->dtTo->dateTime().toUTC().toString(ISO_DATETIME),
+                QString::number(sampling),
+                processingMethod);
 
         this->request.setUrl(QUrl(url));
         reply = this->network->get(this->request);
