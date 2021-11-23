@@ -1,6 +1,7 @@
 #include "FormMain.h"
 #include "ui_FormMain.h"
 
+#include <FormChart.h>
 #include <iostream>
 
 FormMain::FormMain(QWidget *parent)
@@ -435,6 +436,10 @@ void FormMain::on_btnExportMAT_clicked()
 
 void FormMain::on_btnPlotData_clicked()
 {
+    FormChart* plot = new FormChart(this);
+    plot->show();
+    return;
+
     QStringList pvList;
     QString processingMethod;
     int sampling;
