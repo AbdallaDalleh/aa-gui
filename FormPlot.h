@@ -17,6 +17,7 @@
 #define ISO_DATETIME        "yyyy-MM-ddThh:mm:ss.zzzZ"
 #define AXIS_COUNT          5
 #define GRAPH_COUNT         16
+#define REQUEST_PVS_LIST    "http://" SERVER_IP ":" MGMT_PORT "/mgmt/bpl/getAllPVs?limit=-1"
 
 struct data_sample
 {
@@ -42,6 +43,8 @@ public:
 
     QString getUnit(QString pv);
 
+    void fillPVList();
+
 private slots:
     void networkReplyReceived(QNetworkReply *reply);
 
@@ -52,6 +55,7 @@ private:
 
     int sampling;
     QStringList pvList;
+    QStringList allPVs;
     QCompleter* completer;
     QList<QList<data_sample>> pvData;
     QNetworkAccessManager* network;

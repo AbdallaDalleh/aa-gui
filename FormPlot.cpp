@@ -11,7 +11,11 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     this->ui->dtFrom->setDateTime(from);
     this->ui->dtTo->setDateTime(to);
 
-    this->completer = new QCompleter(this->pvList, this);
+    this->network = new QNetworkAccessManager();
+    QObject::connect(network, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkReplyReceived(QNetworkReply*)));
+    this->fillPVList();
+
+    this->completer = new QCompleter(this->allPVs, this);
     this->completer->setCaseSensitivity(Qt::CaseInsensitive);
     this->ui->txtPV->setCompleter(this->completer);
     this->sampling = sampling;
@@ -33,9 +37,6 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     this->colors[13] = QColor(0xff, 0x66, 0xff);
     this->colors[14] = QColor(0x00, 0x00, 0x66);
     this->colors[15] = QColor(Qt::black);
-
-    this->network = new QNetworkAccessManager();
-    QObject::connect(network, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkReplyReceived(QNetworkReply*)));
 
     this->ui->plot->plotLayout()->clear();
     this->ui->plot->legend = new QCPLegend;
@@ -184,6 +185,16 @@ void FormPlot::networkReplyReceived(QNetworkReply* reply)
             pvData.push_back(list);
         }
 
+        // Check if the request was to read the PVs list, parse it and store it in this->pvs.
+        else if(this->request.url().toString().contains("getAllPVs"))
+        {
+            QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+            foreach(QJsonValue v, doc.array())
+            {
+                this->allPVs.append(v.toString());
+            }
+        }
+
         // Check if we received a getPVDetails request. Do nothing and returen.
         else if(this->request.url().toString().contains("getPVDetails"))
         {
@@ -232,4 +243,13 @@ void FormPlot::on_btnPlot_clicked()
     this->pvData.clear();
     sendRequest();
     this->ui->plot->replot();
+}
+
+void FormPlot::fillPVList()
+{
+    QEventLoop loop;
+    this->request.setUrl(QUrl(REQUEST_PVS_LIST));
+    QNetworkReply* reply = network->get(this->request);
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
 }
