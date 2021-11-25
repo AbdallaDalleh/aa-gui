@@ -161,7 +161,7 @@ void FormPlot::networkReplyReceived(QNetworkReply* reply)
                 samples.removeAt(samples.size() - 1);
 
             QList<data_sample> list;
-            for(QString sample : samples)
+            for(QString sample : qAsConst(samples))
             {
                 data_sample d;
                 d.timestamp = sample.split(',')[0].toInt();
