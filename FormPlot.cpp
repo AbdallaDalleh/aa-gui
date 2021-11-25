@@ -37,7 +37,6 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     this->network = new QNetworkAccessManager();
     QObject::connect(network, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkReplyReceived(QNetworkReply*)));
 
-    this->ui->plot->setOpenGl(true);
     this->ui->plot->plotLayout()->clear();
     this->ui->plot->legend = new QCPLegend;
     this->ui->plot->legend->setVisible(true);
@@ -87,6 +86,7 @@ void FormPlot::plotData()
         xAxis.push_back(item.timestamp);
     }
 
+    this->ui->plot->clearGraphs();
     for (int i = 0; i < this->pvList.size(); i++) {
         yAxis.clear();
         for(auto item : qAsConst(this->pvData[i]))
@@ -94,6 +94,7 @@ void FormPlot::plotData()
 
         QString axis = getUnit(this->pvList[i]);
         QCPGraph* graph = this->ui->plot->addGraph(this->plotAxis->axis(QCPAxis::atBottom), this->axisMap[axis]);
+        graph->data()->clear();
         graph->setLineStyle(QCPGraph::lsLine);
         graph->setPen(QPen(this->colors[i]));
         graph->setData(xAxis, yAxis);
@@ -222,4 +223,13 @@ QString FormPlot::getUnit(QString pv)
             return object.toObject()["value"].toString();
     }
     return "";
+}
+
+void FormPlot::on_btnPlot_clicked()
+{
+    for(auto list : qAsConst(this->pvData))
+        list.clear();
+    this->pvData.clear();
+    sendRequest();
+    this->ui->plot->replot();
 }

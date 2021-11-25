@@ -94,6 +94,7 @@ void FormMain::on_txtSearch_textChanged(const QString &arg1)
     }
 }
 
+// Perform search using the methods in the radio buttons.
 bool FormMain::searchMatch(QString pv, QString arg)
 {
     if(this->ui->rbStartsWith->isChecked())
@@ -446,13 +447,20 @@ void FormMain::on_btnPlotData_clicked()
     QStringList pvList;
     QString processingMethod;
     int sampling;
+    uint32_t difference;
 
-    if(this->ui->rbSecodns->isChecked())
-        sampling = this->ui->sbPeriod->value();
-    else if(this->ui->rbMinutes->isChecked())
-        sampling = this->ui->sbPeriod->value() * 60;
+    difference = this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t();
+    if(difference < 3600 * 8)
+    {
+        if(this->ui->rbSecodns->isChecked())
+            sampling = this->ui->sbPeriod->value();
+        else if(this->ui->rbMinutes->isChecked())
+            sampling = this->ui->sbPeriod->value() * 60;
+        else
+            sampling = this->ui->sbPeriod->value() * 3600;
+    }
     else
-        sampling = this->ui->sbPeriod->value() * 3600;
+        sampling = (difference / (3600 * 8)) * 10;
 
     for (int i = 0; i < this->ui->listData->count(); i++ ) {
         pvList.push_back(this->ui->listData->item(i)->text());

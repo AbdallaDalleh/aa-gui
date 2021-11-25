@@ -45,6 +45,8 @@ public:
 private slots:
     void networkReplyReceived(QNetworkReply *reply);
 
+    void on_btnPlot_clicked();
+
 private:
     Ui::FormPlot *ui;
 
