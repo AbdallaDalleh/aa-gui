@@ -78,6 +78,7 @@ FormPlot::~FormPlot()
     delete ui;
 }
 
+// Plot the data to QCustomPlot.
 void FormPlot::plotData()
 {
     QVector<double> xAxis, yAxis;
@@ -102,6 +103,7 @@ void FormPlot::plotData()
     }
 }
 
+// The main function to request archived data.
 void FormPlot::sendRequest()
 {
     QString url;
@@ -109,6 +111,8 @@ void FormPlot::sendRequest()
     for(int i = 0; i < this->pvList.size(); i++)
     {
         QEventLoop loop;
+
+        // Format the URL.
         url = QString(REQUEST_DATA_CSV).arg(
                 this->pvList[i],
                 this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME),
@@ -116,6 +120,7 @@ void FormPlot::sendRequest()
                 QString::number(sampling),
                 processingMethod);
 
+        // Perform the HTTP request and wait to finish.
         this->request.setUrl(QUrl(url));
         reply = this->network->get(this->request);
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
@@ -127,6 +132,8 @@ void FormPlot::sendRequest()
         }
     }
 
+    // This code is to handle a rare case where you request PV during a period which it was not
+    // being archived, therefore we fill the missing timestamps with value 0.
     int timestamp = this->pvData[0][0].timestamp;
     for (int i = 1; i < this->pvData.size(); i++)
     {
@@ -145,12 +152,17 @@ void FormPlot::sendRequest()
     plotData();
 }
 
+// Main slot for receiving HTTP responses.
+// This will check for all types of requests made to the archiver.
 void FormPlot::networkReplyReceived(QNetworkReply* reply)
 {
     if(reply->error())
        QMessageBox::information(0, "Error", reply->errorString());
     else
     {
+        // Check if the request was done to fetch data, i.e. the url contains getData.csv
+        // Parse CSV response and store the output in pvData, a list of lists of structs.
+        // Each sublist is for a PV.
         if(this->request.url().toString().contains("getData.csv"))
         {
             QString raw = QString(reply->readAll());
@@ -170,6 +182,8 @@ void FormPlot::networkReplyReceived(QNetworkReply* reply)
             }
             pvData.push_back(list);
         }
+
+        // Check if we received a getPVDetails request. Do nothing and returen.
         else if(this->request.url().toString().contains("getPVDetails"))
         {
             return;

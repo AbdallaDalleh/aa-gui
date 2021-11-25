@@ -25,12 +25,15 @@ FormMain::~FormMain()
     delete ui;
 }
 
+// Main slot for receiving HTTP responses.
+// This will check for all types of requests made to the archiver.
 void FormMain::networkReplyReceived(QNetworkReply *reply)
 {
     if(reply->error())
        QMessageBox::information(0, "Error", reply->errorString());
     else
     {
+        // Check if the request was to read the PVs list, parse it and store it in this->pvs.
         if(this->request.url().toString().contains(REQUEST_PVS_LIST))
         {
             QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
@@ -41,6 +44,10 @@ void FormMain::networkReplyReceived(QNetworkReply *reply)
             }
             this->ui->listBuffer->sortItems();
         }
+
+        // Check if the request was done to fetch data, i.e. the url contains getData.csv
+        // Parse CSV response and store the output in pvData, a list of lists of structs.
+        // Each sublist is for a PV.
         else if(this->request.url().toString().contains("getData.csv"))
         {
             QString raw = QString(reply->readAll());
@@ -51,7 +58,7 @@ void FormMain::networkReplyReceived(QNetworkReply *reply)
                 samples.removeAt(samples.size() - 1);
 
             QList<data_sample> list;
-            for(QString sample : samples)
+            for(QString sample : qAsConst(samples))
             {
                 data_sample d;
                 d.timestamp = sample.split(',')[0].toInt();
@@ -63,6 +70,7 @@ void FormMain::networkReplyReceived(QNetworkReply *reply)
     }
 }
 
+// Fetch the PVs list from the archiver.
 void FormMain::on_btnFetch_clicked()
 {
     this->ui->listBuffer->clear();
