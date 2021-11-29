@@ -97,12 +97,14 @@ void FormPlot::plotData()
         QCPGraph* graph = this->ui->plot->addGraph(this->plotAxis->axis(QCPAxis::atBottom), this->axisMap[axis]);
         graph->data()->clear();
         graph->setLineStyle(QCPGraph::lsLine);
-        graph->setPen(QPen(this->colors[i]));
+        graph->setPen(QPen(this->colors[i % 16]));
         graph->setData(xAxis, yAxis);
         graph->setName(this->pvList[i]);
         graph->keyAxis()->rescale();
         graph->valueAxis()->rescale();
     }
+
+    this->ui->plot->replot();
 }
 
 // The main function to request archived data.
@@ -252,4 +254,58 @@ void FormPlot::fillPVList()
     QNetworkReply* reply = network->get(this->request);
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
+}
+
+void FormPlot::on_btnAdd_clicked()
+{
+    QString url;
+    QString key;
+    QString pv;
+    QEventLoop loop;
+    QNetworkReply* reply;
+
+    pv = this->ui->txtPV->text();
+    key = getUnit(pv);
+    if(!this->axisMap.contains(key))
+    {
+        this->axisMap[key] = this->plotAxis->addAxis(QCPAxis::atLeft);
+        this->plotAxis->axis(QCPAxis::atLeft, this->pvList.size())->setLabel(key);
+    }
+
+    this->pvList.append(pv);
+    url = QString(REQUEST_DATA_CSV).arg(
+            pv,
+            this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME),
+            this->ui->dtTo->dateTime().toUTC().toString(ISO_DATETIME),
+            QString::number(sampling),
+            processingMethod);
+    this->request.setUrl(QUrl(url));
+
+    reply = this->network->get(this->request);
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+    if(reply->error() != QNetworkReply::NoError)
+    {
+        QMessageBox::warning(this, "Error", "Could not fetch data for PV: " + this->ui->txtPV->text());
+        return;
+    }
+
+    // This code is to handle a rare case where you request PV during a period which it was not
+    // being archived, therefore we fill the missing timestamps with value 0.
+    int timestamp = this->pvData[0][0].timestamp;
+    for (int i = 1; i < this->pvData.size(); i++)
+    {
+        if(this->pvData[i].size() > this->pvData[i - 1].size())
+            timestamp = this->pvData[i][0].timestamp;
+    }
+
+    for(int i = 0; i < this->pvData.size(); i++)
+    {
+        for(int t = this->pvData[i][0].timestamp - this->sampling; t >= timestamp; t -= this->sampling)
+        {
+            this->pvData[i].insert(0, data_sample{t, 0.0});
+        }
+    }
+
+    plotData();
 }

@@ -50,6 +50,8 @@ private slots:
 
     void on_btnPlot_clicked();
 
+    void on_btnAdd_clicked();
+
 private:
     Ui::FormPlot *ui;
 
