@@ -18,6 +18,8 @@ FormMain::FormMain(QWidget *parent)
     this->on_btnFetch_clicked();
 
     this->plot = NULL;
+
+    setFixedSize(width(), height());
 }
 
 FormMain::~FormMain()
@@ -283,17 +285,17 @@ void FormMain::on_btnExportCSV_clicked()
     QTextStream csv;
     int interval;
     int sampling;
+    uint32_t difference;
 
     for(auto item : qAsConst(this->pvData))
         item.clear();
     this->pvData.clear();
 
-    if(this->ui->rbSecodns->isChecked())
-        sampling = this->ui->sbPeriod->value();
-    else if(this->ui->rbMinutes->isChecked())
-        sampling = this->ui->sbPeriod->value() * 60;
+    difference = this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t();
+    if(difference < 3600 * 8)
+        sampling = (difference / (3600 * 8)) * 10;
     else
-        sampling = this->ui->sbPeriod->value() * 3600;
+        sampling = 1;
     processingMethod = this->ui->cbMethod->currentIndex() == 0 ? "firstFill" : this->ui->cbMethod->currentText();
     interval = (this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t()) / sampling;
 
@@ -383,13 +385,13 @@ void FormMain::on_btnExportMAT_clicked()
     QFile matFile;
     QNetworkReply* reply;
     int sampling;
+    uint32_t difference;
 
-    if(this->ui->rbSecodns->isChecked())
-        sampling = this->ui->sbPeriod->value();
-    else if(this->ui->rbMinutes->isChecked())
-        sampling = this->ui->sbPeriod->value() * 60;
+    difference = this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t();
+    if(difference < 3600 * 8)
+        sampling = (difference / (3600 * 8)) * 10;
     else
-        sampling = this->ui->sbPeriod->value() * 3600;
+        sampling = 1;
     processingMethod = this->ui->cbMethod->currentIndex() == 0 ? "firstFill" : this->ui->cbMethod->currentText();
 
     QString directory = QFileDialog::getExistingDirectory(0, "Select a Directory", getenv("HOME"));
@@ -451,15 +453,6 @@ void FormMain::on_btnPlotData_clicked()
 
     difference = this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t();
     if(difference < 3600 * 8)
-    {
-        if(this->ui->rbSecodns->isChecked())
-            sampling = this->ui->sbPeriod->value();
-        else if(this->ui->rbMinutes->isChecked())
-            sampling = this->ui->sbPeriod->value() * 60;
-        else
-            sampling = this->ui->sbPeriod->value() * 3600;
-    }
-    else
         sampling = (difference / (3600 * 8)) * 10;
 
     for (int i = 0; i < this->ui->listData->count(); i++ ) {
