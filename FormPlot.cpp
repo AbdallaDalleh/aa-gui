@@ -70,6 +70,11 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     ui->plot->plotLayout()->setColumnStretchFactor(0, 9);
     ui->plot->plotLayout()->setColumnStretchFactor(1, 1);
 
+    uint32_t start = this->ui->dtFrom->dateTime().toTime_t();
+    uint32_t end = this->ui->dtTo->dateTime().toTime_t();
+    dateTicker = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
+    setTickerFormat(end - start, dateTicker);
+
     sendRequest();
 }
 
@@ -102,6 +107,9 @@ void FormPlot::plotData()
         graph->setName(this->pvList[i]);
         graph->keyAxis()->rescale();
         graph->valueAxis()->rescale();
+
+        setTickerFormat( ui->dtTo->dateTime().toTime_t() - ui->dtFrom->dateTime().toTime_t(), this->dateTicker );
+        graph->keyAxis()->setTicker(this->dateTicker);
     }
 
     this->ui->plot->replot();
@@ -112,6 +120,12 @@ void FormPlot::sendRequest()
 {
     QString url;
     QNetworkReply* reply;
+    uint32_t difference;
+
+    difference = this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t();
+    if(difference > 3600 * 8)
+        sampling = (difference / (3600 * 8)) * 10;
+
     for(int i = 0; i < this->pvList.size(); i++)
     {
         QEventLoop loop;
@@ -308,4 +322,19 @@ void FormPlot::on_btnAdd_clicked()
     }
 
     plotData();
+}
+
+void FormPlot::setTickerFormat(uint duration, QSharedPointer<QCPAxisTickerDateTime> ticker)
+{
+    if(duration < 24 * 3600)
+        ticker->setDateTimeFormat("ddd hh:mm");
+    else if(duration >= 24 * 3600 && duration < 7 * 24 * 3600)
+        ticker->setDateTimeFormat("dd/MM");
+    else if(duration >= 7 * 24 * 3600 && duration < 6 * 30 * 24 * 3600)
+        ticker->setDateTimeFormat("MMM dd");
+    else
+        ticker->setDateTimeFormat("MMM YYYY");
+
+    dateTicker->setTickCount(7);
+    dateTicker->setTickStepStrategy(QCPAxisTicker::tssReadability);
 }

@@ -45,6 +45,8 @@ public:
 
     void fillPVList();
 
+    void setTickerFormat(uint duration, QSharedPointer<QCPAxisTickerDateTime> ticker);
+
 private slots:
     void networkReplyReceived(QNetworkReply *reply);
 
@@ -65,6 +67,7 @@ private:
     QString processingMethod;
     QColor colors[GRAPH_COUNT];
     QMap<QString, QCPAxis*> axisMap;
+    QSharedPointer<QCPAxisTickerDateTime> dateTicker;
 
     QCPAxisRect* plotAxis;
 };
