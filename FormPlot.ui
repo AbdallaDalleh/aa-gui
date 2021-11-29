@@ -90,96 +90,9 @@
        <widget class="QLineEdit" name="txtPV"/>
       </item>
       <item>
-       <widget class="QComboBox" name="cbTimestamp">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <item>
-         <property name="text">
-          <string>Timestamps</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>30 seconds</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>1 minute</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>5 minutes</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>15 minutes</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>30 minutes</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>1 hour</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>4 hours</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>8 hours</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>1 day</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>2 days</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>1 week</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>2 weeks</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>1 month</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>6 months</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>1 year</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item>
        <widget class="QPushButton" name="btnResetAxis">
         <property name="enabled">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="text">
          <string>Reset Axis</string>
@@ -189,7 +102,7 @@
       <item>
        <widget class="QPushButton" name="btnResetGraph">
         <property name="enabled">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="text">
          <string>Reset Graph</string>

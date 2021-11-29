@@ -125,6 +125,8 @@ void FormPlot::sendRequest()
     difference = this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t();
     if(difference > 3600 * 8)
         sampling = (difference / (3600 * 8)) * 10;
+    else
+        sampling = 1;
 
     for(int i = 0; i < this->pvList.size(); i++)
     {
@@ -279,6 +281,12 @@ void FormPlot::on_btnAdd_clicked()
     QNetworkReply* reply;
 
     pv = this->ui->txtPV->text();
+    if(this->pvList.contains(pv))
+    {
+        QMessageBox::information(this, "Note", "PV already exists.");
+        return;
+    }
+
     key = getUnit(pv);
     if(!this->axisMap.contains(key))
     {
@@ -337,4 +345,46 @@ void FormPlot::setTickerFormat(uint duration, QSharedPointer<QCPAxisTickerDateTi
 
     dateTicker->setTickCount(7);
     dateTicker->setTickStepStrategy(QCPAxisTicker::tssReadability);
+}
+
+void FormPlot::on_btnResetAxis_clicked()
+{
+    for(int i = 0; i < this->ui->plot->graphCount(); i++)
+    {
+        this->ui->plot->graph(i)->valueAxis()->rescale();
+        this->ui->plot->graph(i)->keyAxis()->rescale();
+    }
+
+    this->ui->plot->replot();
+}
+
+void FormPlot::on_btnResetGraph_clicked()
+{
+    this->ui->dtFrom->setDateTime(QDateTime::currentDateTime().addSecs(-3600));
+    this->ui->dtTo->setDateTime(QDateTime::currentDateTime());
+    for(auto list : qAsConst(this->pvData))
+        list.clear();
+    this->pvData.clear();
+    sendRequest();
+}
+
+void FormPlot::on_btnScreenshot_clicked()
+{
+    QString initialPath = "/home/control/nfs/machine/screenshots";
+    QFileDialog fileDialog(this, tr("Save As"), initialPath);
+    fileDialog.setAcceptMode(QFileDialog::AcceptSave);
+    fileDialog.setFileMode(QFileDialog::AnyFile);
+    fileDialog.setDirectory(initialPath);
+    fileDialog.setDefaultSuffix(".png");
+    if(fileDialog.exec() != QDialog::Accepted)
+        return;
+
+    this->imageFileName = fileDialog.selectedFiles()[0];
+    QTimer::singleShot(500, this, &FormPlot::saveScreenShot);
+}
+
+void FormPlot::saveScreenShot()
+{
+    QApplication::beep();
+    this->ui->plot->savePng(this->imageFileName);
 }

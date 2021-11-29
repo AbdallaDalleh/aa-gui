@@ -452,8 +452,10 @@ void FormMain::on_btnPlotData_clicked()
     uint32_t difference;
 
     difference = this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t();
-    if(difference < 3600 * 8)
+    if(difference > 3600 * 8)
         sampling = (difference / (3600 * 8)) * 10;
+    else
+        sampling = 1;
 
     for (int i = 0; i < this->ui->listData->count(); i++ ) {
         pvList.push_back(this->ui->listData->item(i)->text());

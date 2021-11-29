@@ -47,12 +47,20 @@ public:
 
     void setTickerFormat(uint duration, QSharedPointer<QCPAxisTickerDateTime> ticker);
 
+    void saveScreenShot();
+
 private slots:
     void networkReplyReceived(QNetworkReply *reply);
 
     void on_btnPlot_clicked();
 
     void on_btnAdd_clicked();
+
+    void on_btnResetAxis_clicked();
+
+    void on_btnResetGraph_clicked();
+
+    void on_btnScreenshot_clicked();
 
 private:
     Ui::FormPlot *ui;
@@ -68,6 +76,7 @@ private:
     QColor colors[GRAPH_COUNT];
     QMap<QString, QCPAxis*> axisMap;
     QSharedPointer<QCPAxisTickerDateTime> dateTicker;
+    QString imageFileName;
 
     QCPAxisRect* plotAxis;
 };
