@@ -70,7 +70,7 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     ui->plot->legend->setFillOrder(QCPLegend::foRowsFirst);
     ui->plot->plotLayout()->setColumnStretchFactor(0, 9);
     ui->plot->plotLayout()->setColumnStretchFactor(1, 1);
-    ui->plot->setInteractions(QCP::iRangeDrag);
+    ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 
     uint32_t start = this->ui->dtFrom->dateTime().toTime_t();
     uint32_t end = this->ui->dtTo->dateTime().toTime_t();
@@ -78,6 +78,7 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     setTickerFormat(end - start, dateTicker);
 
     QObject::connect(this->ui->plot, SIGNAL(mouseRelease(QMouseEvent*)), this, SLOT(onPlotDragFinished(QMouseEvent*)));
+    QObject::connect(this->ui->plot, SIGNAL(mouseWheel(QWheelEvent*)), this, SLOT(onPlotZoomFinished(QWheelEvent*)));
 
     sendRequest();
 }
@@ -97,6 +98,7 @@ void FormPlot::plotData()
     }
 
     this->ui->plot->clearGraphs();
+    setTickerFormat( ui->dtTo->dateTime().toTime_t() - ui->dtFrom->dateTime().toTime_t(), this->dateTicker );
     for (int i = 0; i < this->pvList.size(); i++) {
         yAxis.clear();
         for(auto item : qAsConst(this->pvData[i]))
@@ -111,8 +113,6 @@ void FormPlot::plotData()
         graph->setName(this->pvList[i]);
         graph->keyAxis()->rescale();
         graph->valueAxis()->rescale();
-
-        setTickerFormat( ui->dtTo->dateTime().toTime_t() - ui->dtFrom->dateTime().toTime_t(), this->dateTicker );
         graph->keyAxis()->setTicker(this->dateTicker);
     }
 
@@ -264,7 +264,7 @@ void FormPlot::on_btnPlot_clicked()
         list.clear();
     this->pvData.clear();
     sendRequest();
-    this->ui->plot->replot();
+    // this->ui->plot->replot();
 }
 
 void FormPlot::fillPVList()
@@ -359,6 +359,8 @@ void FormPlot::on_btnResetAxis_clicked()
         this->ui->plot->graph(i)->keyAxis()->rescale();
     }
 
+    this->ui->dtFrom->setDateTime(QDateTime::fromTime_t(this->ui->plot->xAxis->range().lower));
+    this->ui->dtTo->setDateTime(QDateTime::fromTime_t(this->ui->plot->xAxis->range().upper));
     this->ui->plot->replot();
 }
 
@@ -398,6 +400,11 @@ void FormPlot::onPlotDragFinished(QMouseEvent *event)
     Q_UNUSED(event);
 
     QCPAxis* xAxis = this->ui->plot->xAxis;
+    if((uint32_t) xAxis->range().upper > QDateTime::currentSecsSinceEpoch())
+    {
+        QMessageBox::information(this, "Wow!", "Good luck trying to read \"archived\" data from the future :)");
+        return;
+    }
 
     this->ui->dtFrom->setDateTime(QDateTime::fromTime_t(xAxis->range().lower));
     this->ui->dtTo->setDateTime(QDateTime::fromTime_t(xAxis->range().upper));
@@ -405,4 +412,15 @@ void FormPlot::onPlotDragFinished(QMouseEvent *event)
         list.clear();
     this->pvData.clear();
     sendRequest();
+}
+
+void FormPlot::onPlotZoomFinished(QWheelEvent* event)
+{
+    Q_UNUSED(event);
+
+    QCPAxis* xAxis = this->ui->plot->xAxis;
+
+    this->ui->dtFrom->setDateTime(QDateTime::fromTime_t((uint32_t)xAxis->range().lower));
+    this->ui->dtTo->setDateTime(QDateTime::fromTime_t((uint32_t)xAxis->range().upper));
+    setTickerFormat((uint32_t)xAxis->range().upper - (uint32_t)xAxis->range().lower, this->dateTicker);
 }
