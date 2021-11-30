@@ -59,6 +59,7 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
             this->plotAxis->axis(QCPAxis::atLeft, i)->setLabel(key);
         }
     }
+    this->plotAxis->setRangeDrag(Qt::Horizontal);
     this->ui->plot->plotLayout()->addElement(0, 0, this->plotAxis);
 
     QCPLayoutGrid *subLayout = new QCPLayoutGrid;
@@ -69,11 +70,14 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     ui->plot->legend->setFillOrder(QCPLegend::foRowsFirst);
     ui->plot->plotLayout()->setColumnStretchFactor(0, 9);
     ui->plot->plotLayout()->setColumnStretchFactor(1, 1);
+    ui->plot->setInteractions(QCP::iRangeDrag);
 
     uint32_t start = this->ui->dtFrom->dateTime().toTime_t();
     uint32_t end = this->ui->dtTo->dateTime().toTime_t();
     dateTicker = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
     setTickerFormat(end - start, dateTicker);
+
+    QObject::connect(this->ui->plot, SIGNAL(mouseRelease(QMouseEvent*)), this, SLOT(onPlotDragFinished(QMouseEvent*)));
 
     sendRequest();
 }
@@ -379,7 +383,7 @@ void FormPlot::on_btnScreenshot_clicked()
     if(fileDialog.exec() != QDialog::Accepted)
         return;
 
-    this->imageFileName = fileDialog.selectedFiles()[0];
+    this->imageFileName = fileDialog.selectedFiles().at(0);
     QTimer::singleShot(500, this, &FormPlot::saveScreenShot);
 }
 
@@ -387,4 +391,18 @@ void FormPlot::saveScreenShot()
 {
     QApplication::beep();
     this->ui->plot->savePng(this->imageFileName);
+}
+
+void FormPlot::onPlotDragFinished(QMouseEvent *event)
+{
+    Q_UNUSED(event);
+
+    QCPAxis* xAxis = this->ui->plot->xAxis;
+
+    this->ui->dtFrom->setDateTime(QDateTime::fromTime_t(xAxis->range().lower));
+    this->ui->dtTo->setDateTime(QDateTime::fromTime_t(xAxis->range().upper));
+    for(auto list : qAsConst(this->pvData))
+        list.clear();
+    this->pvData.clear();
+    sendRequest();
 }

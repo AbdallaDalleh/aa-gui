@@ -451,6 +451,12 @@ void FormMain::on_btnPlotData_clicked()
     int sampling;
     uint32_t difference;
 
+    if(this->ui->listData->count() <= 0)
+    {
+        QMessageBox::warning(this, "Warning", "PV List is empty.");
+        return;
+    }
+
     difference = this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t();
     if(difference > 3600 * 8)
         sampling = (difference / (3600 * 8)) * 10;

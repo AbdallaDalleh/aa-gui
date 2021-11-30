@@ -62,6 +62,8 @@ private slots:
 
     void on_btnScreenshot_clicked();
 
+    void onPlotDragFinished(QMouseEvent *event);
+
 private:
     Ui::FormPlot *ui;
 
