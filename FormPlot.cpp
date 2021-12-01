@@ -70,7 +70,7 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     ui->plot->legend->setFillOrder(QCPLegend::foRowsFirst);
     ui->plot->plotLayout()->setColumnStretchFactor(0, 9);
     ui->plot->plotLayout()->setColumnStretchFactor(1, 1);
-    ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectLegend);
 
     uint32_t start = this->ui->dtFrom->dateTime().toTime_t();
     uint32_t end = this->ui->dtTo->dateTime().toTime_t();
@@ -80,6 +80,7 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     QObject::connect(this->ui->plot, SIGNAL(mouseRelease(QMouseEvent*)), this, SLOT(onPlotDragFinished(QMouseEvent*)));
     QObject::connect(this->ui->plot, SIGNAL(mouseWheel(QWheelEvent*)), this, SLOT(onPlotZoomFinished(QWheelEvent*)));
     QObject::connect(this->ui->plot, SIGNAL(mouseMove(QMouseEvent*)), this, SLOT(onMouseMove(QMouseEvent*)));
+    QObject::connect(this->ui->plot, SIGNAL(legendClick(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)), this, SLOT(onLegendClicked(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)));
 
     sendRequest();
 }
@@ -401,6 +402,10 @@ void FormPlot::onPlotDragFinished(QMouseEvent *event)
     Q_UNUSED(event);
 
     QCPAxis* xAxis = this->ui->plot->xAxis;
+    if(xAxis->pixelToCoord(event->pos().x()) < ui->dtFrom->dateTime().toTime_t() ||
+       xAxis->pixelToCoord(event->pos().x()) > ui->dtTo->dateTime().toTime_t())
+        return;
+
     if((uint32_t) xAxis->range().upper > QDateTime::currentSecsSinceEpoch())
     {
         QMessageBox::information(this, "Wow!", "Good luck trying to read \"archived\" data from the future :)");
@@ -453,3 +458,18 @@ void FormPlot::onMouseMove(QMouseEvent* event)
     QToolTip::showText(ui->plot->mapToGlobal(event->pos()), message);
 }
 
+void FormPlot::onLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *item, QMouseEvent *event)
+{
+    Q_UNUSED(event)
+
+    for(int i = 0; i < legend->itemCount(); i++)
+    {
+        if(item == legend->item(i))
+        {
+            this->ui->plot->graph(i)->setVisible( ! this->ui->plot->graph(i)->visible() );
+            item->setTextColor( this->ui->plot->graph(i)->visible() ? Qt::black : Qt::gray );
+        }
+    }
+
+    this->ui->plot->replot();
+}

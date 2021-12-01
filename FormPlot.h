@@ -68,6 +68,8 @@ private slots:
 
     void onMouseMove(QMouseEvent* event);
 
+    void onLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *item, QMouseEvent *event);
+
 private:
     Ui::FormPlot *ui;
 
