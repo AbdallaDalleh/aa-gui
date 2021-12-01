@@ -66,6 +66,8 @@ private slots:
 
     void onPlotZoomFinished(QWheelEvent* event);
 
+    void onMouseMove(QMouseEvent* event);
+
 private:
     Ui::FormPlot *ui;
 

@@ -79,6 +79,7 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
 
     QObject::connect(this->ui->plot, SIGNAL(mouseRelease(QMouseEvent*)), this, SLOT(onPlotDragFinished(QMouseEvent*)));
     QObject::connect(this->ui->plot, SIGNAL(mouseWheel(QWheelEvent*)), this, SLOT(onPlotZoomFinished(QWheelEvent*)));
+    QObject::connect(this->ui->plot, SIGNAL(mouseMove(QMouseEvent*)), this, SLOT(onMouseMove(QMouseEvent*)));
 
     sendRequest();
 }
@@ -295,7 +296,7 @@ void FormPlot::on_btnAdd_clicked()
     if(!this->axisMap.contains(key))
     {
         this->axisMap[key] = this->plotAxis->addAxis(QCPAxis::atLeft);
-        this->plotAxis->axis(QCPAxis::atLeft, this->pvList.size())->setLabel(key);
+        this->plotAxis->axis(QCPAxis::atLeft, this->pvList.size() - 1)->setLabel(key);
     }
 
     this->pvList.append(pv);
@@ -424,3 +425,31 @@ void FormPlot::onPlotZoomFinished(QWheelEvent* event)
     this->ui->dtTo->setDateTime(QDateTime::fromTime_t((uint32_t)xAxis->range().upper));
     setTickerFormat((uint32_t)xAxis->range().upper - (uint32_t)xAxis->range().lower, this->dateTicker);
 }
+
+void FormPlot::onMouseMove(QMouseEvent* event)
+{
+    QString message;
+    time_t epoch;
+    double value;
+    QCPGraph* graph;
+
+    if(ui->plot->xAxis->pixelToCoord(event->pos().x()) < ui->dtFrom->dateTime().toTime_t() ||
+       ui->plot->xAxis->pixelToCoord(event->pos().x()) > ui->dtTo->dateTime().toTime_t())
+        return;
+
+    epoch = ui->plot->axisRect()->axis(QCPAxis::atBottom, 0)->pixelToCoord(event->pos().x());
+    message = "Timestamp - " + QDateTime::fromTime_t(epoch).toString("hh:mm:ss dd/MM/yyyy") + "\n";
+
+    for(int i = 0; i < ui->plot->graphCount(); i++)
+    {
+        graph = ui->plot->graph(i);
+        if(graph->valueAxis()->pixelToCoord(event->pos().y()) > graph->valueAxis()->range().upper ||
+           graph->valueAxis()->pixelToCoord(event->pos().y()) < graph->valueAxis()->range().lower)
+            return;
+        value = graph->data()->findBegin(graph->keyAxis()->pixelToCoord(event->pos().x()))->value;
+        message += graph->name() + " - " + QString::number(value) + " " + graph->valueAxis()->label() + (i == ui->plot->graphCount() - 1 ? "" : "\n");
+    }
+
+    QToolTip::showText(ui->plot->mapToGlobal(event->pos()), message);
+}
+
