@@ -10,7 +10,6 @@ CONFIG += c++11
 
 SOURCES += \
     FormPlot.cpp \
-    json.cpp \
     main.cpp \
     FormMain.cpp \
     qcustomplot.cpp
@@ -18,7 +17,6 @@ SOURCES += \
 HEADERS += \
     FormMain.h \
     FormPlot.h \
-    json.h \
     qcustomplot.h
 
 FORMS += \

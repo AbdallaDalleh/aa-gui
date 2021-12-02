@@ -265,8 +265,10 @@ void FormPlot::on_btnPlot_clicked()
     for(auto list : qAsConst(this->pvData))
         list.clear();
     this->pvData.clear();
+
+    if(ui->plot->xAxis->range().upper > QDateTime::currentSecsSinceEpoch())
+        ui->dtTo->setDateTime(QDateTime::currentDateTime());
     sendRequest();
-    // this->ui->plot->replot();
 }
 
 void FormPlot::fillPVList()
@@ -294,13 +296,13 @@ void FormPlot::on_btnAdd_clicked()
     }
 
     key = getUnit(pv);
+    this->pvList.append(pv);
     if(!this->axisMap.contains(key))
     {
         this->axisMap[key] = this->plotAxis->addAxis(QCPAxis::atLeft);
-        this->plotAxis->axis(QCPAxis::atLeft, this->pvList.size() - 1)->setLabel(key);
+        this->axisMap[key]->setLabel(key);
     }
 
-    this->pvList.append(pv);
     url = QString(REQUEST_DATA_CSV).arg(
             pv,
             this->ui->dtFrom->dateTime().toUTC().toString(ISO_DATETIME),
@@ -425,7 +427,6 @@ void FormPlot::onPlotZoomFinished(QWheelEvent* event)
     Q_UNUSED(event);
 
     QCPAxis* xAxis = this->ui->plot->xAxis;
-
     this->ui->dtFrom->setDateTime(QDateTime::fromTime_t((uint32_t)xAxis->range().lower));
     this->ui->dtTo->setDateTime(QDateTime::fromTime_t((uint32_t)xAxis->range().upper));
     setTickerFormat((uint32_t)xAxis->range().upper - (uint32_t)xAxis->range().lower, this->dateTicker);
@@ -462,12 +463,16 @@ void FormPlot::onLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *item, Q
 {
     Q_UNUSED(event)
 
+    if(event->button() == Qt::RightButton)
+        return;
+
     for(int i = 0; i < legend->itemCount(); i++)
     {
         if(item == legend->item(i))
         {
             this->ui->plot->graph(i)->setVisible( ! this->ui->plot->graph(i)->visible() );
             item->setTextColor( this->ui->plot->graph(i)->visible() ? Qt::black : Qt::gray );
+            break;
         }
     }
 
