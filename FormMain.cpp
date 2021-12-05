@@ -292,7 +292,7 @@ void FormMain::on_btnExportCSV_clicked()
     this->pvData.clear();
 
     difference = this->ui->dtTo->dateTime().toTime_t() - this->ui->dtFrom->dateTime().toTime_t();
-    if(difference < 3600 * 8)
+    if(difference > 3600 * 8)
         sampling = (difference / (3600 * 8)) * 10;
     else
         sampling = 1;
@@ -363,7 +363,7 @@ void FormMain::on_btnExportCSV_clicked()
 
     for(int t = 0; t < interval; t++)
     {
-        csv << this->pvData[0][t].timestamp << ",";
+        csv << QDateTime::fromSecsSinceEpoch(this->pvData[0][t].timestamp).toString(STANDARD_DATETIME) << ",";
         for(int i = 0; i < this->pvData.size(); i++)
         {
             csv << this->pvData[i][t].value;

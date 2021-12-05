@@ -20,6 +20,7 @@
 #define REQUEST_DATA_CSV    "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.csv?pv=%5_%4(%1)&from=%2&to=%3"
 #define REQUEST_DATA_MAT    "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.mat?pv=%1&from=%2&to=%3"
 #define ISO_DATETIME        "yyyy-MM-ddThh:mm:ss.zzzZ"
+#define STANDARD_DATETIME   "hh:mm:ss dd/MM/yyyy"
 
 enum OperationStatus
 {

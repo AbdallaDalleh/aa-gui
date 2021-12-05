@@ -349,7 +349,7 @@ void FormPlot::setTickerFormat(uint duration, QSharedPointer<QCPAxisTickerDateTi
     else if(duration >= 7 * 24 * 3600 && duration < 6 * 30 * 24 * 3600)
         ticker->setDateTimeFormat("MMM dd");
     else
-        ticker->setDateTimeFormat("MMM YYYY");
+        ticker->setDateTimeFormat("MMM yyyy");
 
     dateTicker->setTickCount(7);
     dateTicker->setTickStepStrategy(QCPAxisTicker::tssReadability);
