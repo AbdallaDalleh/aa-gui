@@ -478,3 +478,46 @@ void FormPlot::onLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *item, Q
 
     this->ui->plot->replot();
 }
+
+void FormPlot::on_btnExportCSV_clicked()
+{
+    QMessageBox::information(this, "He", QString::number(this->pvData[0].size()));
+    QFile csvFile;
+    QTextStream csv;
+    QString fileName;
+
+    fileName = QFileDialog::getSaveFileName(this, "Save CSV file", getenv("HOME"), tr("CSV Files (*.csv)"));
+    if(fileName.isEmpty())
+    {
+        return;
+    }
+
+    if(!fileName.endsWith(".csv"))
+        fileName += ".csv";
+
+    csvFile.setFileName(fileName);
+    csvFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate);
+    csv.setDevice(&csvFile);
+    csv << "Timestamp,";
+    for(int i = 0; i < ui->plot->graphCount(); i++)
+    {
+        csv << ui->plot->graph(i)->name();
+        if(i != ui->plot->graphCount() - 1)
+            csv << ",";
+    }
+    csv << endl;
+    for(int i = 0; i < this->pvData[0].size(); i++)
+    {
+        csv << QDateTime::fromSecsSinceEpoch(this->pvData[0][i].timestamp).toString(STANDARD_DATETIME) << ",";
+        for(int j = 0; j < this->pvData.size(); j++)
+        {
+            csv << pvData[j][i].value;
+            if(j != this->pvData.size() - 1)
+                csv << ",";
+        }
+        csv << endl;
+    }
+
+    csvFile.close();
+    QMessageBox::information(this, "Done", "CSV File exported to " + fileName + " successfully.");
+}
