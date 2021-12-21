@@ -55,8 +55,11 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
         }
         else
         {
-            this->axisMap[key] = this->plotAxis->addAxis(QCPAxis::atLeft);
-            this->plotAxis->axis(QCPAxis::atLeft, i)->setLabel(key);
+            if(!this->axisMap.contains(key))
+            {
+                this->axisMap[key] = this->plotAxis->addAxis(QCPAxis::atLeft);
+                this->plotAxis->axis(QCPAxis::atLeft, i)->setLabel(key);
+            }
         }
     }
     this->plotAxis->setRangeDrag(Qt::Horizontal);
@@ -71,6 +74,8 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     ui->plot->plotLayout()->setColumnStretchFactor(0, 9);
     ui->plot->plotLayout()->setColumnStretchFactor(1, 1);
     ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectLegend);
+    this->selectedItem = NULL;
+    this->selectedGraph = "";
 
     uint32_t start = this->ui->dtFrom->dateTime().toTime_t();
     uint32_t end = this->ui->dtTo->dateTime().toTime_t();
@@ -299,8 +304,16 @@ void FormPlot::on_btnAdd_clicked()
     this->pvList.append(pv);
     if(!this->axisMap.contains(key))
     {
-        this->axisMap[key] = this->plotAxis->addAxis(QCPAxis::atLeft);
-        this->axisMap[key]->setLabel(key);
+        if(this->pvList.size() == 1)
+        {
+            this->plotAxis->axis(QCPAxis::atLeft, 0)->setLabel(key);
+            this->axisMap[key] = this->plotAxis->axis(QCPAxis::atLeft, 0);
+        }
+        else
+        {
+            this->axisMap[key] = this->plotAxis->addAxis(QCPAxis::atLeft);
+            this->axisMap[key]->setLabel(key);
+        }
     }
 
     url = QString(REQUEST_DATA_CSV).arg(
@@ -470,6 +483,16 @@ void FormPlot::onLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *item, Q
     {
         if(item == legend->item(i))
         {
+            if(this->ui->plot->graph(i)->visible())
+            {
+                this->selectedIndex = i;
+                this->selectedGraph = ui->plot->graph(i)->name();
+            }
+            else
+            {
+                this->selectedIndex = -1;
+                this->selectedGraph = "";
+            }
             this->ui->plot->graph(i)->setVisible( ! this->ui->plot->graph(i)->visible() );
             item->setTextColor( this->ui->plot->graph(i)->visible() ? Qt::black : Qt::gray );
             break;
@@ -520,4 +543,26 @@ void FormPlot::on_btnExportCSV_clicked()
 
     csvFile.close();
     QMessageBox::information(this, "Done", "CSV File exported to " + fileName + " successfully.");
+}
+
+void FormPlot::keyPressEvent(QKeyEvent *event)
+{
+    if(event->key() == Qt::Key_Delete && !this->selectedGraph.isEmpty() && this->selectedIndex != -1)
+    {
+        this->pvList.removeOne(this->selectedGraph);
+        this->pvData.removeAt(this->selectedIndex);
+        ui->plot->removeGraph(this->selectedIndex);
+        for(auto axis : this->plotAxis->axes())
+        {
+            if(axis->graphs().count() <= 0)
+            {
+                this->plotAxis->removeAxis(axis);
+                this->axisMap.remove(axis->label());
+            }
+        }
+        this->plotAxis->setupFullAxesBox(true);
+        ui->plot->replot();
+    }
+
+    QMainWindow::keyPressEvent(event);
 }

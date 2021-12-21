@@ -73,6 +73,8 @@ private slots:
 
     void on_btnExportCSV_clicked();
 
+    void keyPressEvent(QKeyEvent* key);
+
 private:
     Ui::FormPlot *ui;
 
@@ -88,6 +90,9 @@ private:
     QMap<QString, QCPAxis*> axisMap;
     QSharedPointer<QCPAxisTickerDateTime> dateTicker;
     QString imageFileName;
+    QCPAbstractLegendItem* selectedItem;
+    QString selectedGraph;
+    int selectedIndex;
 
     QCPAxisRect* plotAxis;
 };
