@@ -257,7 +257,7 @@ QString FormPlot::getUnit(QString pv)
     if(error.error != QJsonParseError::NoError)
         return "";
 
-    for(auto object : doc.array())
+    foreach (auto object, doc.array())
     {
         if(object.toObject()["name"] == "Units:")
             return object.toObject()["value"].toString();
@@ -552,7 +552,7 @@ void FormPlot::keyPressEvent(QKeyEvent *event)
         this->pvList.removeOne(this->selectedGraph);
         this->pvData.removeAt(this->selectedIndex);
         ui->plot->removeGraph(this->selectedIndex);
-        for(auto axis : this->plotAxis->axes())
+        foreach (auto axis, this->plotAxis->axes())
         {
             if(axis->graphs().count() <= 0)
             {
