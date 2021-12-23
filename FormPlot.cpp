@@ -1,6 +1,10 @@
 #include "FormPlot.h"
 #include "ui_FormPlot.h"
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, QString processingMethod, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::FormPlot)
@@ -88,6 +92,9 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
     QObject::connect(this->ui->plot, SIGNAL(legendClick(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)), this, SLOT(onLegendClicked(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)));
 
     sendRequest();
+
+    this->liveData = new QTimer(this);
+    QObject::connect(liveData, SIGNAL(timeout()), this, SLOT(onLiveDataStart()));
 }
 
 FormPlot::~FormPlot()
@@ -194,7 +201,7 @@ void FormPlot::networkReplyReceived(QNetworkReply* reply)
         // Check if the request was done to fetch data, i.e. the url contains getData.csv
         // Parse CSV response and store the output in pvData, a list of lists of structs.
         // Each sublist is for a PV.
-        if(this->request.url().toString().contains("getData.csv"))
+        if(this->request.url().toString().contains("getData.csv") && this->request.url().toString().contains("to"))
         {
             QString raw = QString(reply->readAll());
             QStringList samples = raw.split('\n');
@@ -267,6 +274,21 @@ QString FormPlot::getUnit(QString pv)
 
 void FormPlot::on_btnPlot_clicked()
 {
+    if(this->pvList.isEmpty())
+    {
+        QMessageBox::warning(this, "Error", "Empty PV List.");
+        return;
+    }
+
+    ui->btnAdd->setEnabled(true);
+    ui->btnExportCSV->setEnabled(true);
+    ui->btnLive->setEnabled(true);
+    ui->btnResetAxis->setEnabled(true);
+    ui->btnResetGraph->setEnabled(true);
+    ui->btnScreenshot->setEnabled(true);
+    ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectLegend);
+    this->liveData->stop();
+
     for(auto list : qAsConst(this->pvData))
         list.clear();
     this->pvData.clear();
@@ -547,6 +569,9 @@ void FormPlot::on_btnExportCSV_clicked()
 
 void FormPlot::keyPressEvent(QKeyEvent *event)
 {
+    if(this->liveData->isActive())
+        return;
+
     if(event->key() == Qt::Key_Delete && !this->selectedGraph.isEmpty() && this->selectedIndex != -1)
     {
         this->pvList.removeOne(this->selectedGraph);
@@ -561,8 +586,60 @@ void FormPlot::keyPressEvent(QKeyEvent *event)
             }
         }
         this->plotAxis->setupFullAxesBox(true);
-        ui->plot->replot();
     }
 
+    ui->plot->replot();
     QMainWindow::keyPressEvent(event);
+}
+
+void FormPlot::on_btnLive_clicked()
+{
+    ui->btnAdd->setEnabled(false);
+    ui->btnExportCSV->setEnabled(false);
+    ui->btnLive->setEnabled(false);
+    ui->btnResetAxis->setEnabled(false);
+    ui->btnResetGraph->setEnabled(false);
+    ui->btnScreenshot->setEnabled(false);
+
+    ui->plot->clearGraphs();
+    this->plotAxis->setupFullAxesBox(true);
+    this->pvData.clear();
+    ui->plot->setInteraction(QCP::iRangeDrag, false);
+    ui->plot->setInteraction(QCP::iRangeZoom, false);
+    ui->plot->setInteraction(QCP::iSelectLegend, false);
+    ui->plot->replot();
+
+    this->ui->dtFrom->setDateTime(QDateTime::currentDateTime().addSecs(-LIVE_DATA_PERIOD));
+    this->ui->dtTo->setDateTime(QDateTime::currentDateTime());
+    sendRequest();
+    liveData->start(1000);
+}
+
+void FormPlot::onLiveDataStart()
+{
+    QString url;
+    QEventLoop loop;
+    QNetworkReply* reply;
+
+    for(auto list : qAsConst(this->pvData))
+        list.clear();
+    this->pvData.clear();
+
+    foreach (QString pv, this->pvList)
+    {
+        url = QString(REQUEST_DATA_LIVE).arg(pv,
+                                             QDateTime::currentDateTimeUtc().addSecs(-LIVE_DATA_PERIOD).toString(ISO_DATETIME),
+                                             QDateTime::currentDateTimeUtc().toString(ISO_DATETIME));
+        this->request.setUrl(QUrl(url));
+        reply = this->network->get(request);
+        QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+        loop.exec();
+        if(reply->error() != QNetworkReply::NoError)
+        {
+            QMessageBox::warning(this, "Error", "Could not fetch live data.");
+            return;
+        }
+    }
+
+    plotData();
 }

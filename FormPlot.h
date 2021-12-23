@@ -13,12 +13,14 @@
 #define RETRIEVAL_PORT      "17668"
 #define MGMT_PORT           "17665"
 #define REQUEST_DATA_CSV    "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.csv?pv=%5_%4(%1)&from=%2&to=%3"
+#define REQUEST_DATA_LIVE   "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.csv?pv=firstFill_1(%1)&from=%2&to=%3"
 #define REQUEST_PV_DETAILS  "http://" SERVER_IP ":" MGMT_PORT "/mgmt/bpl/getPVDetails?pv=%1"
 #define REQUEST_PVS_LIST    "http://" SERVER_IP ":" MGMT_PORT "/mgmt/bpl/getAllPVs?limit=-1"
 #define ISO_DATETIME        "yyyy-MM-ddThh:mm:ss.zzzZ"
 #define STANDARD_DATETIME   "hh:mm:ss dd/MM/yyyy"
 #define AXIS_COUNT          5
 #define GRAPH_COUNT         16
+#define LIVE_DATA_PERIOD    900
 
 struct data_sample
 {
@@ -75,10 +77,16 @@ private slots:
 
     void keyPressEvent(QKeyEvent* key);
 
+    void on_btnLive_clicked();
+
+public slots:
+    void onLiveDataStart();
+
 private:
     Ui::FormPlot *ui;
 
     int sampling;
+    int selectedIndex;
     QStringList pvList;
     QStringList allPVs;
     QCompleter* completer;
@@ -92,7 +100,7 @@ private:
     QString imageFileName;
     QCPAbstractLegendItem* selectedItem;
     QString selectedGraph;
-    int selectedIndex;
+    QTimer* liveData;
 
     QCPAxisRect* plotAxis;
 };
