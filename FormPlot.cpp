@@ -62,7 +62,7 @@ FormPlot::FormPlot(QStringList pvs, QDateTime from, QDateTime to, int sampling, 
             if(!this->axisMap.contains(key))
             {
                 this->axisMap[key] = this->plotAxis->addAxis(QCPAxis::atLeft);
-                this->plotAxis->axis(QCPAxis::atLeft, i)->setLabel(key);
+                this->axisMap[key]->setLabel(key);
             }
         }
     }
@@ -158,7 +158,7 @@ void FormPlot::sendRequest()
                 QString::number(sampling),
                 processingMethod);
 
-        // Perform the HTTP request and wait to finish.
+        // Perform the HTTP request and use the event loop to wait to finish.
         this->request.setUrl(QUrl(url));
         reply = this->network->get(this->request);
         QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
@@ -171,7 +171,7 @@ void FormPlot::sendRequest()
     }
 
     // This code is to handle a rare case where you request PV during a period which it was not
-    // being archived, therefore we fill the missing timestamps with value 0.
+    // being archived, therefore we fill the missing timestamps with value 0, more like firstFill.
     int timestamp = this->pvData[0][0].timestamp;
     for (int i = 1; i < this->pvData.size(); i++)
     {
@@ -198,7 +198,7 @@ void FormPlot::networkReplyReceived(QNetworkReply* reply)
        QMessageBox::information(0, "Error", reply->errorString());
     else
     {
-        // Check if the request was done to fetch data, i.e. the url contains getData.csv
+        // Check if the request was done to fetch data, i.e. the url contains getData.csv.
         // Parse CSV response and store the output in pvData, a list of lists of structs.
         // Each sublist is for a PV.
         if(this->request.url().toString().contains("getData.csv") && this->request.url().toString().contains("to"))
@@ -221,10 +221,17 @@ void FormPlot::networkReplyReceived(QNetworkReply* reply)
             pvData.push_back(list);
         }
 
-        // Check if the request was to read the PVs list, parse it and store it in this->pvs.
+        // Check if the request was to read the PVs list, parse it and store it in this->allPVs.
         else if(this->request.url().toString().contains("getAllPVs"))
         {
-            QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+            QJsonParseError error;
+            QJsonDocument doc = QJsonDocument::fromJson(reply->readAll(), &error);
+            if(error.error != QJsonParseError::NoError)
+            {
+                QMessageBox::warning(this, "Error", "Could not read all PVs list");
+                return;
+            }
+
             foreach(QJsonValue v, doc.array())
             {
                 this->allPVs.append(v.toString());
@@ -244,6 +251,7 @@ void FormPlot::networkReplyReceived(QNetworkReply* reply)
     }
 }
 
+// Read the PV's unit by reading the PV's details and parse the JSON response.
 QString FormPlot::getUnit(QString pv)
 {
     QEventLoop loop;
@@ -272,6 +280,7 @@ QString FormPlot::getUnit(QString pv)
     return "";
 }
 
+// The btnPlot is used to plot data after changing start/end timestamps.
 void FormPlot::on_btnPlot_clicked()
 {
     if(this->pvList.isEmpty())
@@ -280,6 +289,8 @@ void FormPlot::on_btnPlot_clicked()
         return;
     }
 
+    // Basically, quit live mode by enabling all buttons, enable interactions
+    // and stop the timer.
     ui->btnAdd->setEnabled(true);
     ui->btnExportCSV->setEnabled(true);
     ui->btnLive->setEnabled(true);
@@ -289,6 +300,7 @@ void FormPlot::on_btnPlot_clicked()
     ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectLegend);
     this->liveData->stop();
 
+    // Clear all current data.
     for(auto list : qAsConst(this->pvData))
         list.clear();
     this->pvData.clear();
@@ -307,6 +319,7 @@ void FormPlot::fillPVList()
     loop.exec();
 }
 
+// Add PV to the plot from the search text box.
 void FormPlot::on_btnAdd_clicked()
 {
     QString url;
@@ -322,6 +335,7 @@ void FormPlot::on_btnAdd_clicked()
         return;
     }
 
+    // From here on, this is basically same as sendRequest but for a single PV.
     key = getUnit(pv);
     this->pvList.append(pv);
     if(!this->axisMap.contains(key))
@@ -375,6 +389,7 @@ void FormPlot::on_btnAdd_clicked()
     plotData();
 }
 
+// Calculate the duration of the plot and change the ticker format accordingly.
 void FormPlot::setTickerFormat(uint duration, QSharedPointer<QCPAxisTickerDateTime> ticker)
 {
     if(duration < 24 * 3600)
@@ -390,6 +405,7 @@ void FormPlot::setTickerFormat(uint duration, QSharedPointer<QCPAxisTickerDateTi
     dateTicker->setTickStepStrategy(QCPAxisTicker::tssReadability);
 }
 
+// Rescale all axis and reset the start/end timestamps.
 void FormPlot::on_btnResetAxis_clicked()
 {
     for(int i = 0; i < this->ui->plot->graphCount(); i++)
@@ -403,6 +419,7 @@ void FormPlot::on_btnResetAxis_clicked()
     this->ui->plot->replot();
 }
 
+// Reset the graph to a 1 hour default plot of data.
 void FormPlot::on_btnResetGraph_clicked()
 {
     this->ui->dtFrom->setDateTime(QDateTime::currentDateTime().addSecs(-3600));
@@ -438,17 +455,23 @@ void FormPlot::onPlotDragFinished(QMouseEvent *event)
 {
     Q_UNUSED(event);
 
+    // Check if the current mouse position is outside the the axis rectangle, i.e. the plot itself.
+    // pixelToCoord maps the given x coordinate to the current X axis value and check if we are outside
+    // the X axis. Same thing for the Y axis.
     QCPAxis* xAxis = this->ui->plot->xAxis;
     if(xAxis->pixelToCoord(event->pos().x()) < ui->dtFrom->dateTime().toTime_t() ||
        xAxis->pixelToCoord(event->pos().x()) > ui->dtTo->dateTime().toTime_t())
         return;
 
+    // Check if the X axis upper range is larger than the current time, reading data from the from the future.
+    // (Yeah good luck with that :| )
     if((uint32_t) xAxis->range().upper > QDateTime::currentSecsSinceEpoch())
     {
         QMessageBox::information(this, "Wow!", "Good luck trying to read \"archived\" data from the future :)");
         return;
     }
 
+    // Reset dtFrom and dtTo to the current X axis upper range.
     this->ui->dtFrom->setDateTime(QDateTime::fromTime_t(xAxis->range().lower));
     this->ui->dtTo->setDateTime(QDateTime::fromTime_t(xAxis->range().upper));
     for(auto list : qAsConst(this->pvData))
@@ -457,6 +480,7 @@ void FormPlot::onPlotDragFinished(QMouseEvent *event)
     sendRequest();
 }
 
+// Catch zoom on the plot and set the from/to datetime from the x axis accordingly.
 void FormPlot::onPlotZoomFinished(QWheelEvent* event)
 {
     Q_UNUSED(event);
@@ -467,6 +491,7 @@ void FormPlot::onPlotZoomFinished(QWheelEvent* event)
     setTickerFormat((uint32_t)xAxis->range().upper - (uint32_t)xAxis->range().lower, this->dateTicker);
 }
 
+// Catch the mouse move event to draw the tooltip.
 void FormPlot::onMouseMove(QMouseEvent* event)
 {
     QString message;
@@ -474,19 +499,26 @@ void FormPlot::onMouseMove(QMouseEvent* event)
     double value;
     QCPGraph* graph;
 
+    // Again check if the current mouse position is outside the the axis rectangle, i.e. the plot itself.
+    // same as plotDragFinished.
     if(ui->plot->xAxis->pixelToCoord(event->pos().x()) < ui->dtFrom->dateTime().toTime_t() ||
        ui->plot->xAxis->pixelToCoord(event->pos().x()) > ui->dtTo->dateTime().toTime_t())
         return;
 
+    // Get the timestamp of the current mouse position.
     epoch = ui->plot->axisRect()->axis(QCPAxis::atBottom, 0)->pixelToCoord(event->pos().x());
     message = "Timestamp - " + QDateTime::fromTime_t(epoch).toString("hh:mm:ss dd/MM/yyyy") + "\n";
 
     for(int i = 0; i < ui->plot->graphCount(); i++)
     {
+        // Check if the mouse position is outside the Y axis of this graph.
         graph = ui->plot->graph(i);
         if(graph->valueAxis()->pixelToCoord(event->pos().y()) > graph->valueAxis()->range().upper ||
            graph->valueAxis()->pixelToCoord(event->pos().y()) < graph->valueAxis()->range().lower)
             return;
+
+        // Used the graph data iterator to find the current value by mapping the mouse positions' Y
+        // coordinate to the current axis Y value using pixeltoCoord
         value = graph->data()->findBegin(graph->keyAxis()->pixelToCoord(event->pos().x()))->value;
         message += graph->name() + " - " + QString::number(value) + " " + graph->valueAxis()->label() + (i == ui->plot->graphCount() - 1 ? "" : "\n");
     }
@@ -494,6 +526,7 @@ void FormPlot::onMouseMove(QMouseEvent* event)
     QToolTip::showText(ui->plot->mapToGlobal(event->pos()), message);
 }
 
+// Catch mouse click on the plot's legend.
 void FormPlot::onLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *item, QMouseEvent *event)
 {
     Q_UNUSED(event)
@@ -505,6 +538,7 @@ void FormPlot::onLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *item, Q
     {
         if(item == legend->item(i))
         {
+            // Save the selected graph name and index for use in keyPressEvent.
             if(this->ui->plot->graph(i)->visible())
             {
                 this->selectedIndex = i;
@@ -515,6 +549,8 @@ void FormPlot::onLegendClicked(QCPLegend *legend, QCPAbstractLegendItem *item, Q
                 this->selectedIndex = -1;
                 this->selectedGraph = "";
             }
+
+            // Hide the corresponding graph and gray-out the legend's text.
             this->ui->plot->graph(i)->setVisible( ! this->ui->plot->graph(i)->visible() );
             item->setTextColor( this->ui->plot->graph(i)->visible() ? Qt::black : Qt::gray );
             break;
@@ -569,9 +605,11 @@ void FormPlot::on_btnExportCSV_clicked()
 
 void FormPlot::keyPressEvent(QKeyEvent *event)
 {
+    // Return if live mode is running.
     if(this->liveData->isActive())
         return;
 
+    // Check for the delete key only.
     if(event->key() == Qt::Key_Delete && !this->selectedGraph.isEmpty() && this->selectedIndex != -1)
     {
         this->pvList.removeOne(this->selectedGraph);
@@ -592,8 +630,10 @@ void FormPlot::keyPressEvent(QKeyEvent *event)
     QMainWindow::keyPressEvent(event);
 }
 
+// Start live data mode.
 void FormPlot::on_btnLive_clicked()
 {
+    // Disable all buttons except btnPlot.
     ui->btnAdd->setEnabled(false);
     ui->btnExportCSV->setEnabled(false);
     ui->btnLive->setEnabled(false);
@@ -601,6 +641,7 @@ void FormPlot::on_btnLive_clicked()
     ui->btnResetGraph->setEnabled(false);
     ui->btnScreenshot->setEnabled(false);
 
+    // Clear plot's graphs and interactions for proper live data display.
     ui->plot->clearGraphs();
     this->plotAxis->setupFullAxesBox(true);
     this->pvData.clear();
@@ -609,6 +650,7 @@ void FormPlot::on_btnLive_clicked()
     ui->plot->setInteraction(QCP::iSelectLegend, false);
     ui->plot->replot();
 
+    // Start a 900 seconds data frame request and start the timer.
     this->ui->dtFrom->setDateTime(QDateTime::currentDateTime().addSecs(-LIVE_DATA_PERIOD));
     this->ui->dtTo->setDateTime(QDateTime::currentDateTime());
     sendRequest();
@@ -625,6 +667,7 @@ void FormPlot::onLiveDataStart()
         list.clear();
     this->pvData.clear();
 
+    // Fetch the 900 seconds data frame for all PVs and plot the data.
     foreach (QString pv, this->pvList)
     {
         url = QString(REQUEST_DATA_LIVE).arg(pv,

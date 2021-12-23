@@ -223,6 +223,7 @@ void FormMain::setStatus(QString message, OperationStatus success)
     this->statusBar()->showMessage(message);
 }
 
+// Save template file.
 void FormMain::on_btnSave_clicked()
 {
     if(this->ui->dtFrom->dateTime().toTime_t() >= this->ui->dtTo->dateTime().toTime_t())
@@ -378,6 +379,7 @@ void FormMain::on_btnExportCSV_clicked()
     setStatus("Data exported to " + fileName + " successfully.", Success);
 }
 
+// Export data as MATLAB data files .mat
 void FormMain::on_btnExportMAT_clicked()
 {
     QString processingMethod;
@@ -436,6 +438,7 @@ void FormMain::on_btnExportMAT_clicked()
             return;
         }
 
+        // Write the bytes from the http response as they are.
         matFile.write(reply->readAll());
         matFile.close();
         this->ui->progressBar->setValue(i + 1);
