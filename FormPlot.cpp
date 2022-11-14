@@ -125,9 +125,12 @@ void FormPlot::plotData()
         graph->setPen(QPen(this->colors[i % 16]));
         graph->setData(xAxis, yAxis);
         graph->setName(this->pvList[i]);
+        graph->keyAxis()->setTicker(this->dateTicker);
         graph->keyAxis()->rescale();
         graph->valueAxis()->rescale();
-        graph->keyAxis()->setTicker(this->dateTicker);
+
+        QCPRange range = graph->valueAxis()->range();
+        graph->valueAxis()->setRange(range.lower * 0.95, range.upper * 1.05);
     }
 
     this->ui->plot->replot();
@@ -605,29 +608,29 @@ void FormPlot::on_btnExportCSV_clicked()
 
 void FormPlot::keyPressEvent(QKeyEvent *event)
 {
-    // Return if live mode is running.
-    if(this->liveData->isActive())
-        return;
+//    // Return if live mode is running.
+//    if(this->liveData->isActive())
+//        return;
 
-    // Check for the delete key only.
-    if(event->key() == Qt::Key_Delete && !this->selectedGraph.isEmpty() && this->selectedIndex != -1)
-    {
-        this->pvList.removeOne(this->selectedGraph);
-        this->pvData.removeAt(this->selectedIndex);
-        ui->plot->removeGraph(this->selectedIndex);
-        foreach (auto axis, this->plotAxis->axes())
-        {
-            if(axis->graphs().count() <= 0)
-            {
-                this->plotAxis->removeAxis(axis);
-                this->axisMap.remove(axis->label());
-            }
-        }
-        this->plotAxis->setupFullAxesBox(true);
-    }
+//    // Check for the delete key only.
+//    if(event->key() == Qt::Key_Delete && !this->selectedGraph.isEmpty() && this->selectedIndex != -1)
+//    {
+//        this->pvList.removeOne(this->selectedGraph);
+//        this->pvData.removeAt(this->selectedIndex);
+//        ui->plot->removeGraph(this->selectedIndex);
+//        foreach (auto axis, this->plotAxis->axes())
+//        {
+//            if(axis->graphs().count() <= 0)
+//            {
+//                this->plotAxis->removeAxis(axis);
+//                this->axisMap.remove(axis->label());
+//            }
+//        }
+//        this->plotAxis->setupFullAxesBox(true);
+//    }
 
-    ui->plot->replot();
-    QMainWindow::keyPressEvent(event);
+//    ui->plot->replot();
+//    QMainWindow::keyPressEvent(event);
 }
 
 // Start live data mode.
