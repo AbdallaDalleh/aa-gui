@@ -12,28 +12,12 @@
 
 #include "FormPlot.h"
 
-#define SERVER_IP           "10.1.100.9"
-#define RETRIEVAL_PORT      "17668"
-#define MGMT_PORT           "17665"
-#define REQUEST_PVS_LIST    "http://" SERVER_IP ":" MGMT_PORT "/mgmt/bpl/getAllPVs?limit=-1"
-#define REQUEST_DATA        "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.json?pv=%5_%4(%1)&from=%2&to=%3"
-#define REQUEST_DATA_CSV    "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.csv?pv=%5_%4(%1)&from=%2&to=%3"
-#define REQUEST_DATA_MAT    "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.mat?pv=%1&from=%2&to=%3"
-#define ISO_DATETIME        "yyyy-MM-ddThh:mm:ss.zzzZ"
-#define STANDARD_DATETIME   "hh:mm:ss dd/MM/yyyy"
-
 enum OperationStatus
 {
     InProgress,
     Success,
     Failed
 };
-
-//struct data_sample
-//{
-//    int timestamp;
-//    double value;
-//};
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class FormMain; }

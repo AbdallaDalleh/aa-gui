@@ -9,11 +9,12 @@
 
 #include <qcustomplot.h>
 
-#define SERVER_IP           "10.1.100.9"
+#define SERVER_IP           "archiver.sesame.org.jo"
 #define RETRIEVAL_PORT      "17668"
 #define MGMT_PORT           "17665"
 #define REQUEST_DATA_CSV    "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.csv?pv=%5_%4(%1)&from=%2&to=%3"
 #define REQUEST_DATA_LIVE   "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.csv?pv=firstFill_1(%1)&from=%2&to=%3"
+#define REQUEST_DATA_MAT    "http://" SERVER_IP ":" RETRIEVAL_PORT "/retrieval/data/getData.mat?pv=%1&from=%2&to=%3"
 #define REQUEST_PV_DETAILS  "http://" SERVER_IP ":" MGMT_PORT "/mgmt/bpl/getPVDetails?pv=%1"
 #define REQUEST_PVS_LIST    "http://" SERVER_IP ":" MGMT_PORT "/mgmt/bpl/getAllPVs?limit=-1"
 #define ISO_DATETIME        "yyyy-MM-ddThh:mm:ss.zzzZ"
